@@ -397,7 +397,9 @@
                 <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
                     <div style="margin-bottom:10px;">
                         <label><b>בחר מתחם:</b></label><br>
-                        <select id="ganttMall" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;"></select>
+                        <select id="ganttMall" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
+                            <option value="">בחר...</option>
+                        </select>
                     </div>
                     <div style="margin-bottom:10px;">
                         <label><b>סוג קמפיין:</b></label>
@@ -613,7 +615,7 @@
             if(!window.productsData) return;
             const mallSelect = document.getElementById('ganttMall');
             const malls = Array.from(new Set(productsData.map(p=>p['מתחם']).filter(Boolean))).sort();
-            mallSelect.innerHTML = malls.map(m=>`<option value="${m}">${m}</option>`).join('');
+            mallSelect.innerHTML = '<option value="">בחר...</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
         }
         function filterGanttProducts(selectedMall, type, budget) {
             let filtered = productsData.filter(p=>{
@@ -622,7 +624,6 @@
                 if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return false;
                 return true;
             });
-            // אם הוזן תקציב, הגבל לסכום המצטבר
             if(budget && !isNaN(budget) && budget>0) {
                 let sum = 0, limited = [];
                 for(let p of filtered) {
