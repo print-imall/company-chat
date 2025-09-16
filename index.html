@@ -293,7 +293,18 @@
         <div class="config-section">
             <h3>⚙️ הגדרות מערכת</h3>
             
-            <label>📁 שם קובץ ה-Excel (ברפוזיטורי):</label>
+            <label>📁 קישור GitHub לקובץ Excel:</label>
+            <input type="text" id="githubFileUrl" class="config-input" 
+                   placeholder="https://github.com/username/repo/blob/main/products.xlsx"
+                   value="">
+            
+            <small style="display: block; margin-top: 5px; opacity: 0.8;">
+                העתק את הקישור המלא לקובץ ה-Excel מ-GitHub (כולל /blob/main/)
+            </small>
+            
+            <br><br>
+            
+            <label>📁 או שם קובץ ה-Excel:</label>
             <input type="text" id="excelFileName" class="config-input" 
                    placeholder="products.xlsx"
                    value="products.xlsx">
@@ -302,13 +313,15 @@
             
             <label>👤 שם משתמש GitHub:</label>
             <input type="text" id="githubUsername" class="config-input" 
-                   placeholder="username">
+                   placeholder="print-imall"
+                   value="print-imall">
             
             <br><br>
             
             <label>📦 שם רפוזיטורי:</label>
             <input type="text" id="githubRepo" class="config-input" 
-                   placeholder="repository-name">
+                   placeholder="company-chat"
+                   value="company-chat">
             
             <br><br>
             
@@ -400,47 +413,61 @@
             };
         }
 
+        // Convert GitHub blob URL to raw URL
+        function convertToRawUrl(githubUrl) {
+            if (githubUrl.includes('github.com') && githubUrl.includes('/blob/')) {
+                return githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            }
+            return githubUrl;
+        }
+
         // Load Excel data from GitHub repository
         async function loadExcelData() {
+            const fileUrl = document.getElementById('githubFileUrl').value.trim();
             const fileName = excelFileNameInput.value.trim() || 'products.xlsx';
             const manualUsername = document.getElementById('githubUsername').value.trim();
             const manualRepo = document.getElementById('githubRepo').value.trim();
             
-            let username, repoName;
+            let githubUrl;
             
-            // Try to get from manual input first, then from URL
-            if (manualUsername && manualRepo) {
-                username = manualUsername;
-                repoName = manualRepo;
-            } else {
-                const autoDetected = getRepoInfo();
-                username = autoDetected.username;
-                repoName = autoDetected.repoName;
+            // Method 1: Use direct file URL if provided
+            if (fileUrl) {
+                githubUrl = convertToRawUrl(fileUrl);
             }
-            
-            // If still no username/repo, show error
-            if (!username || !repoName) {
-                updateStatus('error', 'חסר מידע GitHub');
-                addMessage(`
-                    <div class="error-message">
-                        <strong>❌ חסר מידע:</strong><br>
-                        אנא מלא את שם המשתמש ושם הרפוזיטורי בהגדרות מעלה.<br><br>
-                        
-                        <strong>איך למצוא:</strong><br>
-                        אם הקישור שלך הוא: https://username.github.io/repo-name<br>
-                        - שם משתמש: username<br>
-                        - שם רפוזיטורי: repo-name
-                    </div>
-                `);
-                return;
+            // Method 2: Build URL from username/repo/filename
+            else if (manualUsername && manualRepo) {
+                githubUrl = `https://raw.githubusercontent.com/${manualUsername}/${manualRepo}/main/${fileName}`;
+            }
+            // Method 3: Try auto-detection
+            else {
+                const autoDetected = getRepoInfo();
+                const username = autoDetected.username;
+                const repoName = autoDetected.repoName;
+                
+                if (!username || !repoName) {
+                    updateStatus('error', 'חסר מידע GitHub');
+                    addMessage(`
+                        <div class="error-message">
+                            <strong>❌ חסר מידע:</strong><br>
+                            אנא בחר אחת מהאפשרויות:<br><br>
+                            
+                            <strong>אפשרות 1:</strong> העתק את הקישור המלא לקובץ מ-GitHub<br>
+                            <strong>אפשרות 2:</strong> מלא שם משתמש ושם רפוזיטורי<br><br>
+                            
+                            <strong>הקישור שלך:</strong><br>
+                            https://github.com/print-imall/company-chat/blob/main/products.xlsx<br>
+                            פשוט העתק אותו לשדה "קישור GitHub לקובץ Excel"
+                        </div>
+                    `);
+                    return;
+                }
+                
+                githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
             }
             
             updateStatus('loading', 'טוען נתונים מ-GitHub...');
             
             try {
-                // GitHub raw content URL
-                const githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
-                
                 console.log('Trying to load from:', githubUrl);
                 
                 const response = await fetch(githubUrl);
@@ -462,13 +489,17 @@
                 updateStatus('ready', `✅ נטענו ${productsData.length} מוצרים`);
                 addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
                           נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
-                          קובץ: ${fileName}<br>
-                          רפוזיטורי: ${username}/${repoName}<br>
-                          URL: ${githubUrl}`);
+                          מקור: <code>${githubUrl}</code>`);
                 
                 // Enable search
                 searchInput.disabled = false;
                 searchBtn.disabled = false;
+                
+                // Show sample of loaded data
+                if (productsData.length > 0) {
+                    const sampleFields = Object.keys(productsData[0]).slice(0, 5).join(', ');
+                    addMessage(`<strong>🔍 שדות זמינים:</strong> ${sampleFields}...`);
+                }
                 
                 console.log('Sample data:', productsData.slice(0, 3));
                 
@@ -481,17 +512,18 @@
                         <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
                         ${error.message}<br><br>
                         
-                        <strong>בדוק את הדברים הבאים:</strong><br>
-                        1. שם המשתמש ושם הרפוזיטורי נכונים<br>
-                        2. הקובץ "${fileName}" קיים בתיקייה הראשית של הרפוזיטורי<br>
-                        3. הרפוזיטורי הוא ציבורי (Public)<br>
-                        4. שם הקובץ נכון (כולל סיומת .xlsx או .xls)<br>
-                        5. הקובץ נמצא ב-branch ראשי (main)<br><br>
-                        
                         <strong>URL שנבדק:</strong><br>
-                        <code>https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}</code><br><br>
+                        <code>${githubUrl}</code><br><br>
                         
-                        <strong>נסה לבדוק את ה-URL הזה ישירות בדפדפן</strong>
+                        <strong>פתרונות אפשריים:</strong><br>
+                        1. בדוק שהקובץ קיים ב-GitHub<br>
+                        2. ודא שהרפוזיטורי ציבורי (Public)<br>
+                        3. נסה לפתוח את ה-URL הזה ישירות בדפדפן<br>
+                        4. בדוק שהקובץ הוא Excel תקין (.xlsx או .xls)<br><br>
+                        
+                        <strong>לדוגמה:</strong><br>
+                        הקישור הנכון עבורך צריך להיות:<br>
+                        <code>https://raw.githubusercontent.com/print-imall/company-chat/main/products.xlsx</code>
                     </div>
                 `);
             }
