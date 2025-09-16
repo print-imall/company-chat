@@ -7,7 +7,6 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏢</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        html, body { height: 100%; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -52,7 +51,6 @@
             width: 100%;
             padding: 0;
             margin: 0;
-            gap: 0;
         }
         .sidebar {
             width: 285px;
@@ -66,9 +64,6 @@
             box-shadow: none;
             padding: 25px 0 0 0;
             transition: transform 0.3s;
-        }
-        .sidebar-mobile-toggle {
-            display: none;
         }
         .stats-card, .quick-info {
             background: rgba(255,255,255,0.08);
@@ -107,7 +102,6 @@
             padding: 30px 14px 16px 14px;
             overflow-y: auto;
             min-height: 340px;
-            max-height: 65vh;
             border: 1.7px solid #d7d7ef;
             box-shadow: 0 2px 14px 2px rgba(80,80,160,0.06);
             transition: border 0.2s;
@@ -141,11 +135,8 @@
             margin: 18px 0;
             box-shadow: none;
             border: none;
-            max-height: 600px;
-            overflow-y: auto;
-            transition: max-height 0.3s;
+            /* אין max-height ואין overflow */
         }
-        .product-result.expanded { max-height: none; }
         .product-compact { display: flex; gap: 32px; align-items: flex-start;}
         .product-image-compact {
             flex-shrink: 0;
@@ -155,14 +146,13 @@
             justify-content: center;
         }
         .product-image-compact img {
-            width: 200px;
-            height: 170px;
+            width: 210px;
+            height: 180px;
             object-fit: contain;
             border-radius: 17px;
             background: #fff;
             border: 1.5px solid #ddd;
             box-shadow: 0 2px 13px 0 rgba(80,80,160,0.08);
-            margin:0;
         }
         .product-info-compact {flex:1;}
         .product-table-wrapper { width: 100%; overflow-x: auto;}
@@ -182,61 +172,49 @@
         .product-table th {
             background: rgba(255,255,255,0.15);
             font-weight: 600;
-            font-size: 14.5px;
+            font-size: 15px;
+            min-width: 85px;
         }
-        .product-table td {font-size: 15.5px;font-weight: 500;}
+        .product-table td {font-size: 16.5px;font-weight: 500;}
         .product-table tr:last-child td {border-bottom: none;}
         .product-table .highlight-row {background: rgba(255,255,255,0.12);}
         .action-buttons-product {
             display: flex;
-            gap: 8px;
-            margin-top: 13px;
+            gap: 14px;
+            margin-top: 16px;
             justify-content: flex-end;
         }
-        .btn-expand, .btn-share {
-            padding: 7px 15px;
-            border: none;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-expand {background: rgba(255,255,255,0.18);color: white;}
-        .btn-expand:hover {background: rgba(255,255,255,0.30);transform: translateY(-1px);}
         .btn-share {
+            padding: 16px 36px;
+            border: none;
+            border-radius: 22px;
+            font-size: 19px;
+            font-weight: 700;
+            cursor: pointer;
             background: linear-gradient(135deg,#25d366,#128c7e);
             color: white;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            box-shadow: 0 2px 9px 0 rgba(40,167,69,0.10);
+            transition: all 0.2s;
         }
-        .btn-share:hover {transform: translateY(-2px); box-shadow: none;}
-        .product-details-full {display: none;}
-        .image-loading, .no-image-placeholder {
-            width: 200px; height: 170px;
-            background: rgba(255,255,255,0.13);
-            border-radius: 17px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 17px; color: #fff;
-        }
-        .image-loading {animation: pulse 1.5s infinite;}
-        .no-image-placeholder {flex-direction:column;}
+        .btn-share:hover {transform: translateY(-1px); box-shadow: 0 4px 13px 0 rgba(40,167,69,0.13);}
         .input-area {
             display: flex;
-            gap: 13px;
+            gap: 18px;
             background: rgba(255,255,255,0.97);
-            padding: 16px;
+            padding: 24px 12px 24px 12px;
             border-radius: 0;
             border: none;
             box-shadow: none;
         }
         .search-input {
             flex: 1;
-            padding: 13px 14px;
+            padding: 18px 20px;
             border: 2px solid #e9ecef;
-            border-radius: 23px;
-            font-size: 16px;
+            border-radius: 27px;
+            font-size: 21px;
             outline: none;
             transition: all 0.3s;
         }
@@ -244,9 +222,19 @@
             border-color: #007bff;
             box-shadow: 0 0 0 2px rgba(0,123,255,0.10);
         }
+        .search-btn, .clear-btn {
+            padding: 18px 32px;
+            font-size: 21px;
+            font-weight: 700;
+            border-radius: 27px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
         .search-btn {
             background: linear-gradient(135deg,#007bff,#0056b3);
             color: white;
+            margin-right: 4px;
         }
         .search-btn:disabled {
             opacity: .65;
@@ -267,77 +255,29 @@
             border-radius: 13px;
             margin-bottom: 12px;
         }
-
-        /* MOBILE: Sidebar collapsible, chat with min border */
         @media (max-width: 900px) {
             .main-container { flex-direction: column; }
             .sidebar { width: 100%; min-width: unset; max-width: unset; padding:10px 0 0 0;}
             .chat-area { width: 100%; }
         }
         @media (max-width: 700px) {
-            .sidebar {
-                position: fixed;
-                right: 0; top: 0; z-index: 2000;
-                width: 90vw;
-                min-width: 0;
-                max-width: 100vw;
-                background: rgba(255,255,255,0.98);
-                color: #222;
-                box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-                transform: translateX(100%);
-                transition: transform 0.35s cubic-bezier(.68,-0.55,.27,1.55);
-                padding: 24px 12px 20px 12px;
-                border-radius: 0 0 0 14px;
-            }
-            .sidebar.open { transform: translateX(0);}
-            .sidebar .stats-card, .sidebar .quick-info {
-                background: none;
-                color: #444;
-                box-shadow: none;
-                border-radius: 11px;
-                border: 1.2px solid #d7d7ef;
-            }
-            .sidebar-mobile-toggle {
-                display: block;
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 2100;
-                background: #fff;
-                color: #3636a5;
-                border: 1.3px solid #d7d7ef;
-                font-size: 22px;
-                border-radius: 50%;
-                width: 54px; height: 54px;
-                display: flex; align-items: center; justify-content: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.13);
-                cursor: pointer;
-            }
-            .sidebar-close-btn {
-                display: block;
-                background: transparent;
-                border: none;
-                color: #3636a5;
-                font-size: 24px;
-                position: absolute;
-                left: 14px;
-                top: 14px;
-                cursor: pointer;
-            }
+            .sidebar { display: none; }
+            .main-container { flex-direction: column;}
             .messages-area {
                 border: 1.5px solid #b1b1d2;
                 border-radius: 10px;
                 box-shadow: 0 1px 7px 1px rgba(80,80,160,0.04);
                 min-height: 180px;
-                max-height: 46vh;
-                padding: 9px;
+                padding: 14px 2vw 8px 2vw;
             }
-            .chat-area { width: 100%; }
-            .product-image-compact img, .no-image-placeholder, .image-loading { height: 110px; width: 90vw; max-width: 270px;}
-            .input-area { flex-direction: column; gap: 7px; padding: 7px;}
-            .product-compact { flex-direction: column; gap: 7px;}
-            .product-table-wrapper { width: 100%; overflow-x: auto;}
-            .product-table th, .product-table td { padding: 6px 3px; font-size: 12px;}
+            .input-area { flex-direction: column; gap: 13px; padding: 12px;}
+            .product-compact { flex-direction: column; gap: 12px;}
+            .product-image-compact img { width: 99vw; max-width: 99vw; height: 180px;}
+            .btn-share, .search-btn, .clear-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 20px;
+            }
         }
         .messages-area::-webkit-scrollbar { width: 8px;}
         .messages-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.07); border-radius: 10px;}
@@ -353,25 +293,24 @@
             <span>טוען נתונים...</span>
         </div>
     </div>
-    <div class="sidebar" id="sidebar">
-        <button class="sidebar-close-btn" id="sidebarCloseBtn" style="display:none;">✖</button>
-        <div class="stats-card" id="statsCard" style="display: none;">
-            <div class="stats-number" id="productCount">0</div>
-            <div class="stats-label">מוצרים במאגר</div>
-        </div>
-        <div class="quick-info">
-            <h3>💡 מידע מהיר</h3>
-            <p><strong>🎯 חיפוש חכם:</strong> החיפוש מתחיל בפלטפורמה ואז עובר לשדות אחרים</p>
-            <p><strong>🔍 דוגמאות חיפוש:</strong></p>
-            <p>• שם פלטפורמה</p>
-            <p>• מספר מקט</p>
-            <p>• שם מתחם</p>
-            <p>• שם קמפיין</p>
-            <p><strong>📷 תמונות:</strong> מוצגות אוטומטית לפי מספר המקט</p>
-        </div>
-    </div>
-    <div class="sidebar-mobile-toggle" id="sidebarToggle" title="מידע נוסף" style="display:none;">☰</div>
     <div class="main-container">
+        <!-- Sidebar with Info (לא מוצג במובייל) -->
+        <div class="sidebar">
+            <div class="stats-card" id="statsCard" style="display: none;">
+                <div class="stats-number" id="productCount">0</div>
+                <div class="stats-label">מוצרים במאגר</div>
+            </div>
+            <div class="quick-info">
+                <h3>💡 מידע מהיר</h3>
+                <p><strong>🎯 חיפוש חכם:</strong> החיפוש מתחיל בפלטפורמה ואז עובר לשדות אחרים</p>
+                <p><strong>🔍 דוגמאות חיפוש:</strong></p>
+                <p>• שם פלטפורמה</p>
+                <p>• מספר מקט</p>
+                <p>• שם מתחם</p>
+                <p>• שם קמפיין</p>
+                <p><strong>📷 תמונות:</strong> מוצגות אוטומטית לפי מספר המקט</p>
+            </div>
+        </div>
         <div class="chat-area">
             <div class="messages-area" id="messagesArea">
                 <div class="message system">
@@ -400,31 +339,7 @@
         </div>
     </div>
     <script>
-        // Sidebar toggle for mobile
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-        function updateSidebarDisplay() {
-            if(window.innerWidth<=700){
-                sidebarToggle.style.display='flex';
-                sidebar.classList.remove('open');
-                sidebarCloseBtn.style.display='block';
-            } else {
-                sidebarToggle.style.display='none';
-                sidebar.classList.remove('open');
-                sidebarCloseBtn.style.display='none';
-            }
-        }
-        sidebarToggle && sidebarToggle.addEventListener('click',()=>{
-            sidebar.classList.add('open');
-        });
-        sidebarCloseBtn && sidebarCloseBtn.addEventListener('click',()=>{
-            sidebar.classList.remove('open');
-        });
-        window.addEventListener('resize',updateSidebarDisplay);
-        window.addEventListener('DOMContentLoaded',updateSidebarDisplay);
-
-        // Configuration - Fixed settings
+        // הגדרות
         const CONFIG = {
             githubUser: 'print-imall',
             githubRepo: 'company-chat',
@@ -432,7 +347,6 @@
             imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
             imageFormat: 'direct'
         };
-
         let productsData = [];
         const statusIndicator = document.getElementById('statusIndicator');
         const messagesArea = document.getElementById('messagesArea');
@@ -441,14 +355,12 @@
         const clearBtn = document.getElementById('clearBtn');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
-
         function updateStatus(status, text) {
-            const statusEl = document.getElementById('statusIndicator');
-            statusEl.className = 'status-indicator ' + status;
+            statusIndicator.className = 'status-indicator ' + status;
             let icon = '⏳';
             if (status === 'ready') icon = '✅';
             else if (status === 'error') icon = '❌';
-            statusEl.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
+            statusIndicator.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
         }
         function clearHistory() {
             const systemMessages = messagesArea.querySelectorAll('.message.system');
@@ -506,71 +418,42 @@
             }
         }
 
-        // שיפור חיפוש: התאמה גמישה לכל המילים, לא משנה הסדר
+        // שיפור החיפוש - כל המילים בפלטפורמה (לא משנה הסדר)
         function searchProducts(query) {
             if (!query.trim()) return [];
             const originalQuery = query.trim();
-            const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
-            // ניקוד: כל מילה תורמת, לא משנה סדר, לא מחייב התאמה מדויקת
-            function countMatchingWords(str, terms) {
-                let s = str.toLowerCase();
-                let score = 0;
-                let foundTerms = [];
-                for(const t of terms){
-                    if(s.includes(t)){
-                        score++;
-                        foundTerms.push(t);
-                    }
-                }
-                return {score, foundTerms};
-            }
-            // ניקוד ראשי - כל המילים
-            let bestResult = null;
-            let bestScore = -1;
-            productsData.forEach(product=>{
-                let totalScore = 0, fieldsMatched = new Set(), foundTerms = new Set();
-                // חפש בכל שדה עיקרי
-                ['פלטפורמה','מקט','מתחם','קמפיין','מחיר מכירה','מבקרים','גובה','רוחב','גובה2','רוחב2'].forEach(f=>{
-                    if(product[f]){
-                        let {score, foundTerms: fts} = countMatchingWords(String(product[f]),searchTerms);
-                        totalScore += score;
-                        if(score){ fieldsMatched.add(f);}
-                        fts.forEach(t=>foundTerms.add(t));
-                    }
-                });
-                // ניקוד: כל מילה שנמצאה בשדה כלשהו = 2 נק', בשדה חשוב (פלטפורמה/מקט/מתחם/קמפיין) = 3 נק'
-                let bonus = 0;
-                ['פלטפורמה','מקט','מתחם','קמפיין'].forEach(f=>{
-                    if(product[f]){
-                        let {score} = countMatchingWords(String(product[f]),searchTerms);
-                        bonus += score;
-                    }
-                });
-                let score = totalScore*2 + bonus;
-                // עדיפות אם כל המילים נמצאו
-                if(foundTerms.size===searchTerms.length) score += 5;
-                // הכי הרבה מילים תואמות, בעדיפות כל המילים
-                if(score>bestScore || (score===bestScore && foundTerms.size>=(bestResult?.foundTerms?.size||0))){
-                    bestResult = {product, score, foundTerms, fieldsMatched};
-                    bestScore = score;
-                }
+            const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(t=>t.length>0);
+            // 1. חפש שכל המילים בפלטפורמה (לא משנה הסדר)
+            const platformResults = productsData.filter(product=>{
+                const plat = String(product['פלטפורמה']||'').toLowerCase();
+                return searchTerms.every(term=>plat.includes(term));
             });
-            if(bestResult && bestScore>0) return [bestResult];
+            if(platformResults.length>0) {
+                return [{product: platformResults[0]}];
+            }
+            // 2. fallback - מצא תוצאה עם מירב המילים בכל שדה
+            let best = null, bestCount = 0;
+            productsData.forEach(product=>{
+                let count = 0;
+                Object.values(product).forEach(val=>{
+                    if(!val) return;
+                    const s = String(val).toLowerCase();
+                    count += searchTerms.filter(t=>s.includes(t)).length;
+                });
+                if(count>bestCount) {best=product;bestCount=count;}
+            });
+            if(best) return [{product: best}];
             return [];
         }
-
         function displayProductResult(item) {
             const product = item.product;
             const productCode = product['מקט'] || 'לא זמין';
             const imageUrl = generateImageUrl(productCode);
-            // הצג תמיד את כל הפרטים (מידות, מבקרים וכו') במחשב
-            const hasDimensions1 = product['גובה'] && product['רוחב'];
-            const hasDimensions2 = product['גובה2'] && product['רוחב2'];
-            const isMobile = window.innerWidth <= 700;
             let html = '<div class="product-result">';
             html += '<div class="product-compact">';
             html += '<div class="product-image-compact">';
-            html += '<div class="image-loading" id="img-' + productCode + '">⏳ טוען תמונה...</div>';
+            // מציג placeholder פשוט, לא אנימציה
+            html += `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}" onerror="this.onerror=null;this.src='';this.alt='אין תמונה';" style="background:#fff" />`;
             html += '</div>';
             html += '<div class="product-info-compact">';
             html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
@@ -581,26 +464,15 @@
             html += '<tr><th>מתחם</th><td>' + (product['מתחם'] || 'לא זמין') + '</td></tr>';
             html += '<tr><th>מחיר מכירה</th><td>' + (product['מחיר מכירה'] || 'לא זמין') + '</td></tr>';
             html += '<tr><th>קמפיין</th><td>' + (product['קמפיין'] || 'לא זמין') + '</td></tr>';
+            html += `<tr><th>גובה</th><td>${product['גובה']||'-'}</td></tr>`;
+            html += `<tr><th>רוחב</th><td>${product['רוחב']||'-'}</td></tr>`;
             html += '<tr><th>מספר מבקרים</th><td>' + (product['מבקרים'] || '-') + '</td></tr>';
-            if (hasDimensions1) html += '<tr><th>גובה × רוחב</th><td>' + product['גובה'] + ' × ' + product['רוחב'] + '</td></tr>';
-            if (hasDimensions2) html += '<tr><th>גובה2 × רוחב2</th><td>' + product['גובה2'] + ' × ' + product['רוחב2'] + '</td></tr>';
             html += '</tbody></table></div>';
             html += '<div class="action-buttons-product">';
             html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בוואטסאפ</button>';
             html += '</div></div></div></div>';
             addMessage(html);
-            // Load image
-            const img = new Image();
-            const imageContainer = document.getElementById('img-' + productCode);
-            img.onload = function() {
-                if (imageContainer) imageContainer.innerHTML = '<img src="' + imageUrl + '" alt="תמונת מוצר ' + productCode + '">';
-            };
-            img.onerror = function() {
-                if (imageContainer) imageContainer.innerHTML = '<div class="no-image-placeholder"><span style="font-size: 20px;">📷</span><br><strong>אין תמונה</strong><br><small>מקט: ' + productCode + '</small></div>';
-            };
-            img.src = imageUrl;
         }
-        // שיתוף עם טבלת מידות יפה בווטסאפ
         function shareProduct(productCode) {
             const allMsgs = Array.from(messagesArea.querySelectorAll('.product-result'));
             let prodDiv = null;
@@ -612,28 +484,15 @@
             if (!table) return;
             const rows = table.querySelectorAll('tr');
             let productText = '📦 *פרטי מוצר - מק"ט: ' + productCode + '*\n\n';
-            let measurements = [];
             rows.forEach(row => {
                 const th = row.querySelector('th');
                 const td = row.querySelector('td');
                 if (th && td) {
                     const label = th.textContent.trim();
                     const value = td.textContent.trim();
-                    if(label.includes('גובה') || label.includes('רוחב')) measurements.push({label,value});
-                    else productText += '*' + label + ':* ' + value + '\n';
+                    productText += '*' + label + ':* ' + value + '\n';
                 }
             });
-            if(measurements.length>0){
-                productText += '\n*מידות:*\n';
-                // Unicode-style table
-                productText += '╔═══════════════╦═══════════════╗\n';
-                measurements.forEach(row => {
-                    let l = row.label.padEnd(12,' ');
-                    let v = row.value.padEnd(12,' ');
-                    productText += '║ ' + l + ' ║ ' + v + ' ║\n';
-                });
-                productText += '╚═══════════════╩═══════════════╝\n';
-            }
             const imageUrl = generateImageUrl(productCode);
             productText += '\n📷 *תמונה:* ' + imageUrl;
             productText += '\n\n—\n📡 נשלח ממערכת צ\'אט החברה';
