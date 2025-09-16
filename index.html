@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת צ'אט החברה</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .status-indicator.loading {
+            background: rgba(255, 193, 7, 0.3);
+        }
+
+        .status-indicator.ready {
+            background: rgba(40, 167, 69, 0.3);
+        }
+
+        .status-indicator.error {
+            background: rgba(220, 53, 69, 0.3);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .messages-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.system {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+        }
+
+        .product-result {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .product-code {
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .confidence-score {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .product-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .detail-value {
+            font-size: 16px;
+        }
+
+        .product-image {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .product-image img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-loading {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .file-upload-area {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .config-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏢 מערכת צ'אט החברה</h1>
+        <div class="status-indicator loading" id="statusIndicator">
+            ⏳ מטען נתונים...
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <!-- File Upload Section -->
+        <div class="file-upload-area" id="uploadArea">
+            <h3>📁 העלאת קבצים</h3>
+            <p>העלה קובץ Excel עם נתוני המוצרים</p>
+            <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
+            <button class="upload-btn" onclick="document.getElementById('excelFile').click()">
+                בחר קובץ Excel
+            </button>
+            <span id="fileStatus">לא נבחר קובץ</span>
+        </div>
+
+        <!-- Dropbox Configuration -->
+        <div class="config-section">
+            <h3>📷 הגדרת Dropbox</h3>
+            <label>כתובת התיקייה הציבורית ב-Dropbox:</label>
+            <input type="text" id="dropboxUrl" class="config-input" 
+                   placeholder="https://dl.dropboxusercontent.com/s/your-folder-link/"
+                   value="">
+            <small style="display: block; margin-top: 5px; opacity: 0.8;">
+                הכנס את הקישור לתיקייה הציבורית שבה נמצאות התמונות
+            </small>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-area" id="messagesArea">
+            <div class="message system">
+                <strong>🤖 מערכת צ'אט מוכנה!</strong><br>
+                העלה קובץ Excel עם נתוני המוצרים והגדר את כתובת Dropbox כדי להתחיל לחפש מוצרים.
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <input type="text" id="searchInput" class="search-input" 
+                   placeholder="חפש מוצר (לדוגמה: מקט, מתחם, פלטפורמה...)" 
+                   disabled>
+            <button id="searchBtn" class="search-btn" disabled>🔍 חפש</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let productsData = [];
+        let dropboxBaseUrl = '';
+        
+        // DOM elements
+        const statusIndicator = document.getElementById('statusIndicator');
+        const messagesArea = document.getElementById('messagesArea');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const excelFile = document.getElementById('excelFile');
+        const fileStatus = document.getElementById('fileStatus');
+        const dropboxUrlInput = document.getElementById('dropboxUrl');
+
+        // Update status indicator
+        function updateStatus(status, text) {
+            statusIndicator.className = `status-indicator ${status}`;
+            statusIndicator.textContent = text;
+        }
+
+        // Add message to chat
+        function addMessage(content, type = 'system') {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.innerHTML = content;
+            messagesArea.appendChild(message);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // Handle Excel file upload
+        excelFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileStatus.textContent = `נבחר: ${file.name}`;
+            updateStatus('loading', 'קורא קובץ Excel...');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    productsData = jsonData;
+                    updateStatus('ready', `✅ נטענו ${productsData.length} מוצרים`);
+                    addMessage(`<strong>📊 קובץ Excel נטען בהצלחה!</strong><br>נמצאו ${productsData.length} מוצרים במאגר הנתונים.`);
+                    
+                    // Enable search if dropbox is also configured
+                    checkSystemReady();
+                    
+                } catch (error) {
+                    updateStatus('error', 'שגיאה בקריאת הקובץ');
+                    addMessage(`<strong>❌ שגיאה:</strong> לא ניתן לקרוא את קובץ ה-Excel. בדוק שהקובץ תקין.`);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Handle Dropbox URL configuration
+        dropboxUrlInput.addEventListener('input', function(e) {
+            dropboxBaseUrl = e.target.value.trim();
+            if (dropboxBaseUrl && !dropboxBaseUrl.endsWith('/')) {
+                dropboxBaseUrl += '/';
+            }
+            checkSystemReady();
+        });
+
+        // Check if system is ready
+        function checkSystemReady() {
+            if (productsData.length > 0 && dropboxBaseUrl) {
+                searchInput.disabled = false;
+                searchBtn.disabled = false;
+                addMessage(`<strong>🎉 המערכת מוכנה לשימוש!</strong><br>אתה יכול עכשיו לחפש מוצרים במאגר הנתונים.`);
+            }
+        }
+
+        // Search function with fuzzy matching
+        function searchProducts(query) {
+            if (!query.trim()) return [];
+
+            const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+            
+            return productsData.map(product => {
+                let score = 0;
+                let matches = [];
+
+                // Define searchable fields with Hebrew labels
+                const searchFields = {
+                    'מתחם': product['מתחם'] || '',
+                    'מקט': product['מקט'] || '',
+                    'פלטפורמה': product['פלטפורמה'] || '',
+                    'מחיר מכירה': product['מחיר מכירה'] || '',
+                    'מבקרים': product['מבקרים'] || '',
+                    'גובה': product['גובה'] || '',
+                    'רוחב': product['רוחב'] || '',
+                    'גובה2': product['גובה2'] || '',
+                    'רוחב2': product['רוחב2'] || '',
+                    'קמפיין': product['קמפיין'] || ''
+                };
+
+                // Check each search term against each field
+                searchTerms.forEach(term => {
+                    Object.entries(searchFields).forEach(([fieldName, fieldValue]) => {
+                        const fieldStr = String(fieldValue).toLowerCase();
+                        
+                        // Exact match gets highest score
+                        if (fieldStr === term) {
+                            score += 10;
+                            matches.push(`${fieldName}: התאמה מלאה`);
+                        }
+                        // Contains match gets medium score
+                        else if (fieldStr.includes(term)) {
+                            score += 5;
+                            matches.push(`${fieldName}: מכיל "${term}"`);
+                        }
+                        // Partial match gets lower score
+                        else if (term.length > 2 && fieldStr.includes(term.substring(0, term.length-1))) {
+                            score += 2;
+                            matches.push(`${fieldName}: התאמה חלקית`);
+                        }
+                    });
+                });
+
+                return { product, score, matches };
+            })
+            .filter(item => item.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5); // Return top 5 matches
+        }
+
+        // Display product result
+        function displayProductResult(item) {
+            const { product, score, matches } = item;
+            const confidence = Math.min(100, Math.round((score / 10) * 100));
+            
+            const productCode = product['מקט'] || 'לא זמין';
+            const imageUrl = dropboxBaseUrl ? `${dropboxBaseUrl}${productCode}.jpg` : '';
+
+            let html = `
+                <div class="product-result">
+                    <div class="product-header">
+                        <div class="product-code">מקט: ${productCode}</div>
+                        <div class="confidence-score">רמת התאמה: ${confidence}%</div>
+                    </div>
+                    <div class="product-details">
+                        <div class="detail-item">
+                            <div class="detail-label">מתחם</div>
+                            <div class="detail-value">${product['מתחם'] || 'לא זמין'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">פלטפורמה</div>
+                            <div class="detail-value">${product['פלטפורמה'] || 'לא זמין'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">מחיר מכירה</div>
+                            <div class="detail-value">${product['מחיר מכירה'] || 'לא זמין'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">מבקרים</div>
+                            <div class="detail-value">${product['מבקרים'] || 'לא זמין'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">גובה × רוחב</div>
+                            <div class="detail-value">${product['גובה'] || '?'} × ${product['רוחב'] || '?'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">גובה2 × רוחב2</div>
+                            <div class="detail-value">${product['גובה2'] || '?'} × ${product['רוחב2'] || '?'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">קמפיין</div>
+                            <div class="detail-value">${product['קמפיין'] || 'לא זמין'}</div>
+                        </div>
+                    </div>
+            `;
+
+            if (imageUrl) {
+                html += `
+                    <div class="product-image">
+                        <div class="image-loading">⏳ טוען תמונה...</div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+
+            addMessage(html);
+
+            // Try to load image
+            if (imageUrl) {
+                const img = new Image();
+                img.onload = function() {
+                    const imageContainer = messagesArea.lastElementChild.querySelector('.image-loading');
+                    if (imageContainer) {
+                        imageContainer.innerHTML = `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}">`;
+                    }
+                };
+                img.onerror = function() {
+                    const imageContainer = messagesArea.lastElementChild.querySelector('.image-loading');
+                    if (imageContainer) {
+                        imageContainer.innerHTML = `<div style="color: rgba(255,255,255,0.7);">❌ לא נמצאה תמונה עבור מקט ${productCode}</div>`;
+                    }
+                };
+                img.src = imageUrl;
+            }
+        }
+
+        // Handle search
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            addMessage(query, 'user');
+            
+            const results = searchProducts(query);
+            
+            if (results.length === 0) {
+                addMessage(`<strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצאו מוצרים התואמים לחיפוש "${query}". נסה חיפוש אחר או בדוק את האיות.`);
+            } else {
+                addMessage(`<strong>🎯 נמצאו ${results.length} תוצאות עבור "${query}":</strong>`);
+                results.forEach(displayProductResult);
+            }
+
+            searchInput.value = '';
+        }
+
+        // Event listeners
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Initialize
+        updateStatus('loading', 'מחכה לקבצים...');
+    </script>
+</body>
+</html>
