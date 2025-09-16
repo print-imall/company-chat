@@ -672,7 +672,7 @@
             return matches / longer.length;
         }
 
-        // Platform-first search function
+        // Platform-first search function with multi-word support
         function searchProducts(query) {
             if (!query.trim()) return [];
 
@@ -685,19 +685,27 @@
                 const queryLower = originalQuery.toLowerCase();
                 let score = 0;
                 let matches = [];
+                let matchedTermsCount = 0;
 
+                // Check for full query match in platform
                 if (platformValue === queryLower) {
                     score = 1000;
                     matches.push('פלטפורמה: התאמה מושלמת');
+                    matchedTermsCount = searchTerms.length;
                 }
+                // Check if platform contains full query
                 else if (platformValue.includes(queryLower) && queryLower.length > 1) {
                     score = 800;
                     matches.push('פלטפורמה: מכיל את החיפוש המלא');
+                    matchedTermsCount = searchTerms.length;
                 }
+                // Check if platform starts with query
                 else if (platformValue.startsWith(queryLower)) {
                     score = 700;
                     matches.push('פלטפורמה: מתחיל בחיפוש');
+                    matchedTermsCount = searchTerms.length;
                 }
+                // Check individual terms in platform
                 else {
                     searchTerms.forEach(term => {
                         if (term.length < 2) return;
@@ -705,35 +713,55 @@
                         if (platformValue === term) {
                             score += 600;
                             matches.push(`פלטפורמה: התאמה מלאה למונח "${term}"`);
+                            matchedTermsCount++;
                         }
                         else if (platformValue.includes(term)) {
                             score += 400;
                             matches.push(`פלטפורמה: מכיל "${term}"`);
+                            matchedTermsCount++;
                         }
                         else if (platformValue.startsWith(term)) {
                             score += 500;
                             matches.push(`פלטפורמה: מתחיל ב-"${term}"`);
+                            matchedTermsCount++;
                         }
                     });
                 }
 
+                // For multi-word queries, prioritize results that match ALL terms
+                if (searchTerms.length > 1) {
+                    if (matchedTermsCount === searchTerms.length) {
+                        score += 1000; // Big bonus for matching all terms
+                    } else if (matchedTermsCount > 0) {
+                        score += matchedTermsCount * 100; // Partial bonus based on matched terms
+                    }
+                }
+
                 if (score > 0) {
-                    return { product, score, matches, searchLevel: 'platform' };
+                    return { product, score, matches, searchLevel: 'platform', matchedTermsCount };
                 }
                 return null;
             }).filter(item => item !== null);
 
-            // If found in platform, return the best
+            // If found in platform, return the best (prioritizing those that match all terms)
             if (platformResults.length > 0) {
-                const bestResult = platformResults.sort((a, b) => b.score - a.score)[0];
+                const bestResult = platformResults.sort((a, b) => {
+                    // First sort by matched terms count, then by score
+                    if (a.matchedTermsCount !== b.matchedTermsCount) {
+                        return b.matchedTermsCount - a.matchedTermsCount;
+                    }
+                    return b.score - a.score;
+                })[0];
                 return [bestResult];
             }
 
-            // Step 2: Search in other fields
+            // Step 2: Search in other fields with multi-word support
             const generalResults = productsData.map(product => {
                 let score = 0;
                 let matches = [];
                 let highPriorityMatches = 0;
+                let totalMatchedTerms = 0;
+                const termMatches = new Set(); // Track which terms matched
 
                 const searchFields = {
                     'מקט': { value: String(product['מקט'] || ''), priority: 10 },
@@ -747,52 +775,103 @@
                     'רוחב2': { value: String(product['רוחב2'] || ''), priority: 3 }
                 };
 
-                // Exact phrase matching
+                // First check for complete query match across all fields
                 Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
                     const fieldStr = fieldData.value.toLowerCase();
                     const queryLower = originalQuery.toLowerCase();
                     
                     if (fieldStr === queryLower) {
-                        score += fieldData.priority * 15;
-                        matches.push(`${fieldName}: התאמה מושלמת`);
+                        score += fieldData.priority * 20;
+                        matches.push(`${fieldName}: התאמה מושלמת לכל החיפוש`);
                         highPriorityMatches++;
+                        searchTerms.forEach(term => termMatches.add(term));
                     }
                     else if (fieldStr.includes(queryLower) && queryLower.length > 2) {
-                        score += fieldData.priority * 12;
-                        matches.push(`${fieldName}: מכיל את החיפוש`);
-                        if (fieldData.priority >= 8) highPriorityMatches++;
+                        score += fieldData.priority * 15;
+                        matches.push(`${fieldName}: מכיל את כל החיפוש`);
+                        if (fieldData.priority >= 6) highPriorityMatches++;
+                        searchTerms.forEach(term => termMatches.add(term));
                     }
                 });
 
-                // Individual terms matching
+                // Then check individual terms
                 searchTerms.forEach(term => {
                     if (term.length < 2) return;
+                    let termFoundInAnyField = false;
                     
                     Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
                         const fieldStr = fieldData.value.toLowerCase();
                         
                         if (fieldStr === term) {
-                            score += fieldData.priority * 10;
-                            matches.push(`${fieldName}: מתאים ל-"${term}"`);
-                            if (fieldData.priority >= 8) highPriorityMatches++;
+                            score += fieldData.priority * 12;
+                            matches.push(`${fieldName}: התאמה מלאה ל-"${term}"`);
+                            if (fieldData.priority >= 6) highPriorityMatches++;
+                            termFoundInAnyField = true;
                         }
                         else if (fieldStr.startsWith(term)) {
-                            score += fieldData.priority * 8;
+                            score += fieldData.priority * 10;
                             matches.push(`${fieldName}: מתחיל ב-"${term}"`);
+                            if (fieldData.priority >= 6) highPriorityMatches++;
+                            termFoundInAnyField = true;
                         }
                         else if (fieldStr.includes(term)) {
-                            score += fieldData.priority * 5;
+                            score += fieldData.priority * 7;
                             matches.push(`${fieldName}: מכיל "${term}"`);
+                            termFoundInAnyField = true;
                         }
                     });
+                    
+                    if (termFoundInAnyField) {
+                        termMatches.add(term);
+                    }
                 });
 
-                if (highPriorityMatches > 1) score += 20;
-                if (searchTerms.length > 1 && matches.length >= searchTerms.length) score += 10;
+                totalMatchedTerms = termMatches.size;
 
-                return { product, score, matches, highPriorityMatches, searchLevel: 'general' };
+                // Big bonus for matching all terms in multi-word queries
+                if (searchTerms.length > 1) {
+                    if (totalMatchedTerms === searchTerms.length) {
+                        score += 1500; // Huge bonus for matching all terms
+                        matches.unshift('🎯 מתאים לכל המילים בחיפוש');
+                    } else if (totalMatchedTerms > 0) {
+                        score += totalMatchedTerms * 200; // Partial bonus
+                    }
+                }
+
+                // Additional bonuses
+                if (highPriorityMatches > 1) score += 300;
+                if (matches.length >= searchTerms.length) score += 200;
+
+                return { 
+                    product, 
+                    score, 
+                    matches, 
+                    highPriorityMatches, 
+                    searchLevel: 'general',
+                    matchedTermsCount: totalMatchedTerms
+                };
             })
-            .filter(item => item.score > 0)
+            .filter(item => {
+                // For multi-word queries, only return items that match at least half the terms
+                if (searchTerms.length > 1) {
+                    return item.matchedTermsCount >= Math.ceil(searchTerms.length / 2);
+                }
+                return item.score > 0;
+            })
+            .sort((a, b) => {
+                // First prioritize by matched terms count, then by high priority matches, then by score
+                if (a.matchedTermsCount !== b.matchedTermsCount) {
+                    return b.matchedTermsCount - a.matchedTermsCount;
+                }
+                if (a.highPriorityMatches !== b.highPriorityMatches) {
+                    return b.highPriorityMatches - a.highPriorityMatches;
+                }
+                return b.score - a.score;
+            })
+            .slice(0, 1);
+
+            return generalResults;
+        })
             .sort((a, b) => {
                 if (a.highPriorityMatches !== b.highPriorityMatches) {
                     return b.highPriorityMatches - a.highPriorityMatches;
@@ -814,6 +893,10 @@
 
             const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
             const uniqueId = 'product-' + Date.now();
+            
+            // Check if dimensions exist
+            const hasDimensions1 = product['גובה'] && product['רוחב'];
+            const hasDimensions2 = product['גובה2'] && product['רוחב2'];
             
             let html = `
                 <div class="product-result" id="${uniqueId}">
@@ -876,19 +959,46 @@
                         
                         <h4 style="margin: 0 0 10px 0;">פרטים מלאים:</h4>
                         <table class="product-table">
-                            <tbody>
+                            <tbody>`;
+            
+            // Add visitors if exists
+            if (product['מבקרים']) {
+                html += `
                                 <tr>
                                     <th>מבקרים</th>
-                                    <td>${product['מבקרים'] || 'לא זמין'}</td>
-                                </tr>
+                                    <td>${product['מבקרים']}</td>
+                                </tr>`;
+            }
+            
+            // Add dimensions 1 if exists
+            if (hasDimensions1) {
+                html += `
                                 <tr>
                                     <th>גובה × רוחב</th>
-                                    <td>${product['גובה'] || '?'} × ${product['רוחב'] || '?'}</td>
-                                </tr>
+                                    <td>${product['גובה']} × ${product['רוחב']}</td>
+                                </tr>`;
+            }
+            
+            // Add dimensions 2 if exists
+            if (hasDimensions2) {
+                html += `
                                 <tr>
                                     <th>גובה2 × רוחב2</th>
-                                    <td>${product['גובה2'] || '?'} × ${product['רוחב2'] || '?'}</td>
-                                </tr>
+                                    <td>${product['גובה2']} × ${product['רוחב2']}</td>
+                                </tr>`;
+            }
+            
+            // If no additional details exist, show message
+            if (!product['מבקרים'] && !hasDimensions1 && !hasDimensions2) {
+                html += `
+                                <tr>
+                                    <td colspan="2" style="text-align: center; opacity: 0.8; font-style: italic;">
+                                        אין פרטים נוספים זמינים
+                                    </td>
+                                </tr>`;
+            }
+            
+            html += `
                             </tbody>
                         </table>
                     </div>
@@ -911,7 +1021,7 @@
                 if (imageContainer) {
                     imageContainer.innerHTML = `
                         <div class="no-image-placeholder">
-                            <span style="font-size: 24px;">📷</span><br>
+                            <span style="font-size: 20px;">📷</span><br>
                             <strong>אין תמונה</strong><br>
                             <small>מקט: ${productCode}</small>
                         </div>
