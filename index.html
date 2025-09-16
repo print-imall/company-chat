@@ -301,9 +301,120 @@
             align-items: center;
             justify-content: center;
         }
-        .gantt-bar-label {
-            font-size:15px;
-            color:#222;
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .export-btn.excel {
+            background: linear-gradient(135deg, #217346, #0d5d2b);
+            color: white;
+        }
+        .export-btn.json {
+            background: linear-gradient(135deg, #fd7e14, #e55a00);
+            color: white;
+        }
+        .export-btn.csv {
+            background: linear-gradient(135deg, #6f42c1, #5a2d91);
+            color: white;
+        }
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .dashboard-widget {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #007bff;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .saved-searches {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .saved-search-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .saved-search-item:hover {
+            background: #e9ecef;
+        }
+        .saved-search-text {
+            flex: 1;
+            font-size: 14px;
+            color: #495057;
+        }
+        .saved-search-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .saved-search-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .search-btn-load {
+            background: #007bff;
+            color: white;
+        }
+        .search-btn-delete {
+            background: #dc3545;
+            color: white;
         }
         .gantt-controls {
             background: rgba(255,255,255,0.95);
@@ -466,6 +577,7 @@
             <div class="tabs-area">
                 <button id="tabSearch" class="tab-btn active">🔍 חיפוש</button>
                 <button id="tabGantt" class="tab-btn">📊 גאנט תקציב</button>
+                <button id="tabDashboard" class="tab-btn">📈 דשבורד</button>
             </div>
             <div id="tabSearchPanel" class="tab-panel" style="display:block;">
                 <div class="messages-area" id="messagesArea">
@@ -487,10 +599,20 @@
                         <span>🔍</span>
                         <span>חפש</span>
                     </button>
+                    <button id="saveSearchBtn" class="search-btn" style="background: linear-gradient(135deg,#28a745,#20c997);" disabled>
+                        <span>💾</span>
+                        <span>שמור</span>
+                    </button>
                     <button id="clearBtn" class="clear-btn" onclick="clearHistory()">
                         <span>🗑️</span>
                         <span>נקה</span>
                     </button>
+                </div>
+                
+                <!-- חיפושים שמורים -->
+                <div style="background: rgba(255,255,255,0.95); padding: 15px; margin-bottom: 10px; border-radius: 12px; display: none;" id="savedSearchesContainer">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">💾 חיפושים שמורים</h4>
+                    <div class="saved-searches" id="savedSearchesList"></div>
                 </div>
             </div>
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
@@ -524,15 +646,121 @@
                         <input type="number" id="ganttBudget" min="0" step="1" placeholder="הכנס תקציב מקסימלי (אופציונלי)">
                     </div>
                     
-                    <button id="ganttCalcBtn" style="width:100%; padding:15px; font-size:18px; font-weight:700; border-radius:12px; background:linear-gradient(135deg,#007bff,#0056b3); color:white; border:none; cursor:pointer; margin-bottom:20px;">📊 חשב תקציב</button>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <button id="ganttCalcBtn" style="flex:2; padding:15px; font-size:18px; font-weight:700; border-radius:12px; background:linear-gradient(135deg,#007bff,#0056b3); color:white; border:none; cursor:pointer;">📊 חשב תקציב</button>
+                        <button id="ganttClearBtn" style="flex:1; padding:15px; font-size:18px; font-weight:700; border-radius:12px; background:linear-gradient(135deg,#6c757d,#495057); color:white; border:none; cursor:pointer;">🗑️ נקה</button>
+                    </div>
                     
                     <div id="ganttResults"></div>
+                </div>
+            <div id="tabDashboardPanel" class="tab-panel" style="display:none;">
+                <div class="dashboard-widget">
+                    <h3 style="margin-top:0; color:#333; text-align:center;">📈 דשבורד נתונים</h3>
+                    
+                    <!-- סטטיסטיקות כלליות -->
+                    <div class="stats-grid" id="dashboardStats"></div>
+                    
+                    <!-- כפתורי ייצוא -->
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <h4 style="color:#333; margin-bottom:10px;">📥 ייצוא נתונים</h4>
+                        <div class="export-buttons">
+                            <button class="export-btn excel" onclick="exportToExcel()">
+                                📊 ייצוא Excel
+                            </button>
+                            <button class="export-btn csv" onclick="exportToCSV()">
+                                📋 ייצוא CSV
+                            </button>
+                            <button class="export-btn json" onclick="exportToJSON()">
+                                🔧 ייצוא JSON
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- גרפים -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div>
+                            <h4 style="color:#333; text-align:center;">📊 התפלגות לפי מתחמים</h4>
+                            <canvas id="mallsChart" style="max-height:250px;"></canvas>
+                        </div>
+                        <div>
+                            <h4 style="color:#333; text-align:center;">💰 התפלגות מחירים</h4>
+                            <canvas id="pricesChart" style="max-height:250px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px;">
+                        <h4 style="color:#333; text-align:center;">🏆 טופ מתחמים לפי מחיר ממוצע</h4>
+                        <canvas id="topMallsChart" style="max-height:300px;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- הוספת Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        function updateStatus(status, text) {
+        function displayAllProductResults(items) {
+            currentSearchResults = items; // שמירת התוצאות הנוכחיות
+            if (items.length > 0) {
+                const matchType = items[0].matchType;
+                if (matchType === 'platform') {
+                    addMessage(`<strong>🎯 נמצאו ${items.length} תוצאות בפלטפורמה:</strong><br>התוצאות מוצגות לפי התאמה מדויקת בשדה "פלטפורמה".`);
+                } else {
+                    addMessage(`<strong>🔍 נמצאו ${items.length} תוצאות בחיפוש כללי:</strong><br>לא נמצאו התאמות בפלטפורמה, מוצגות תוצאות מכל השדות.`);
+                }
+                
+                // הוספת כפתורי ייצוא לתוצאות החיפוש
+                addMessage(`
+                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <strong>📥 ייצא תוצאות חיפוש:</strong><br>
+                        <div class="export-buttons" style="margin-top: 10px;">
+                            <button class="export-btn excel" onclick="exportSearchResults('excel')">📊 Excel</button>
+                            <button class="export-btn csv" onclick="exportSearchResults('csv')">📋 CSV</button>
+                            <button class="export-btn json" onclick="exportSearchResults('json')">🔧 JSON</button>
+                        </div>
+                    </div>
+                `);
+            }
+            items.forEach(displayProductResult);
+        }
+
+        // ייצוא תוצאות חיפוש ספציפיות
+        function exportSearchResults(format) {
+            if (!currentSearchResults || currentSearchResults.length === 0) {
+                alert('אין תוצאות חיפוש לייצוא');
+                return;
+            }
+            
+            const searchData = currentSearchResults.map(item => item.product);
+            const searchQuery = document.getElementById('searchInput').value || 'חיפוש_אחרון';
+            
+            switch (format) {
+                case 'excel':
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(searchData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'תוצאות_חיפוש');
+                    XLSX.writeFile(wb, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    break;
+                    
+                case 'csv':
+                    const csv = convertToCSV(searchData);
+                    downloadFile(csv, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+                    break;
+                    
+                case 'json':
+                    const data = {
+                        search_query: searchQuery,
+                        exported_at: new Date().toISOString(),
+                        results_count: searchData.length,
+                        results: searchData
+                    };
+                    downloadFile(JSON.stringify(data, null, 2), `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+                    break;
+            }
+            
+            addMessage(`<strong>📥 ייצוא ${format.toUpperCase()} הושלם!</strong><br>תוצאות החיפוש יוצאו בהצלחה.`);
+        } updateStatus(status, text) {
             var statusIndicator = document.getElementById('statusIndicator');
             if (!statusIndicator) return;
             statusIndicator.className = 'status-indicator ' + status;
@@ -559,6 +787,350 @@
         // Multi-select functionality
         let selectedMalls = new Set();
         let allMalls = [];
+        let savedSearches = JSON.parse(localStorage.getItem('companySearches') || '[]');
+        let currentSearchResults = [];
+
+        // פונקציות ייצוא נתונים
+        function exportToExcel() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(productsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'מוצרים');
+            
+            // הוספת גיליון עם סטטיסטיקות
+            const stats = generateStatistics();
+            const statsWs = XLSX.utils.json_to_sheet([stats]);
+            XLSX.utils.book_append_sheet(wb, statsWs, 'סטטיסטיקות');
+            
+            XLSX.writeFile(wb, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.xlsx`);
+            addMessage('<strong>📊 ייצוא Excel הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function exportToCSV() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const csv = convertToCSV(productsData);
+            downloadFile(csv, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+            addMessage('<strong>📋 ייצוא CSV הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function exportToJSON() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const data = {
+                exported_at: new Date().toISOString(),
+                total_products: productsData.length,
+                statistics: generateStatistics(),
+                products: productsData
+            };
+            
+            downloadFile(JSON.stringify(data, null, 2), `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+            addMessage('<strong>🔧 ייצוא JSON הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function convertToCSV(data) {
+            if (!data || data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.map(row => {
+                return headers.map(header => {
+                    const value = row[header] || '';
+                    // התמודדות עם פסיקים ומרכאות ב-CSV
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                }).join(',');
+            });
+            
+            return [csvHeaders, ...csvRows].join('\n');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType + ';charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // פונקציות שמירת חיפושים
+        function saveCurrentSearch() {
+            const searchText = document.getElementById('searchInput').value.trim();
+            if (!searchText) {
+                alert('הכנס טקסט חיפוש לשמירה');
+                return;
+            }
+            
+            const searchObj = {
+                id: Date.now(),
+                text: searchText,
+                date: new Date().toLocaleDateString('he-IL'),
+                results_count: currentSearchResults.length
+            };
+            
+            savedSearches.unshift(searchObj);
+            if (savedSearches.length > 20) savedSearches.pop(); // שמירה של 20 חיפושים אחרונים
+            
+            localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+            updateSavedSearchesDisplay();
+            addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${searchText}" נשמר בהצלחה.`);
+        }
+
+        function loadSavedSearch(searchText) {
+            document.getElementById('searchInput').value = searchText;
+            performSearch();
+        }
+
+        function deleteSavedSearch(searchId) {
+            savedSearches = savedSearches.filter(s => s.id !== searchId);
+            localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+            updateSavedSearchesDisplay();
+        }
+
+        function updateSavedSearchesDisplay() {
+            const container = document.getElementById('savedSearchesContainer');
+            const list = document.getElementById('savedSearchesList');
+            
+            if (savedSearches.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            list.innerHTML = savedSearches.map(search => `
+                <div class="saved-search-item">
+                    <div class="saved-search-text">
+                        <strong>"${search.text}"</strong><br>
+                        <small>${search.date} • ${search.results_count} תוצאות</small>
+                    </div>
+                    <div class="saved-search-actions">
+                        <button class="saved-search-btn search-btn-load" onclick="loadSavedSearch('${search.text}')">טען</button>
+                        <button class="saved-search-btn search-btn-delete" onclick="deleteSavedSearch(${search.id})">מחק</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // פונקציות דשבורד וגרפים
+        function generateStatistics() {
+            if (!productsData || productsData.length === 0) return {};
+            
+            const stats = {
+                total_products: productsData.length,
+                total_malls: new Set(productsData.map(p => p['מתחם']).filter(Boolean)).size,
+                total_platforms: new Set(productsData.map(p => p['פלטפורמה']).filter(Boolean)).size,
+                avg_price: 0,
+                min_price: 0,
+                max_price: 0,
+                total_visitors: 0
+            };
+            
+            const prices = productsData.map(p => {
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                return isNaN(price) ? 0 : price;
+            }).filter(p => p > 0);
+            
+            if (prices.length > 0) {
+                stats.avg_price = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+                stats.min_price = Math.min(...prices);
+                stats.max_price = Math.max(...prices);
+            }
+            
+            const visitors = productsData.map(p => {
+                const v = Number(String(p['מבקרים'] || '0').replace(/[^0-9]/g, ''));
+                return isNaN(v) ? 0 : v;
+            });
+            stats.total_visitors = visitors.reduce((a, b) => a + b, 0);
+            
+            return stats;
+        }
+
+        function updateDashboard() {
+            if (!productsData || productsData.length === 0) return;
+            
+            const stats = generateStatistics();
+            
+            // עדכון סטטיסטיקות
+            document.getElementById('dashboardStats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_products.toLocaleString()}</div>
+                    <div class="stat-label">סה"כ מוצרים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_malls}</div>
+                    <div class="stat-label">מתחמים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_platforms}</div>
+                    <div class="stat-label">פלטפורמות</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.avg_price.toLocaleString()} ₪</div>
+                    <div class="stat-label">מחיר ממוצע</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_visitors.toLocaleString()}</div>
+                    <div class="stat-label">סה"כ מבקרים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.max_price.toLocaleString()} ₪</div>
+                    <div class="stat-label">מחיר מקסימלי</div>
+                </div>
+            `;
+            
+            createCharts();
+        }
+
+        function createCharts() {
+            createMallsChart();
+            createPricesChart();
+            createTopMallsChart();
+        }
+
+        function createMallsChart() {
+            const ctx = document.getElementById('mallsChart');
+            if (!ctx) return;
+            
+            const mallCounts = {};
+            productsData.forEach(p => {
+                const mall = p['מתחם'] || 'לא מוגדר';
+                mallCounts[mall] = (mallCounts[mall] || 0) + 1;
+            });
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(mallCounts),
+                    datasets: [{
+                        data: Object.values(mallCounts),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+                            '#4BC0C0', '#FF6384'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPricesChart() {
+            const ctx = document.getElementById('pricesChart');
+            if (!ctx) return;
+            
+            const prices = productsData.map(p => {
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                return isNaN(price) ? 0 : price;
+            }).filter(p => p > 0);
+            
+            // יצירת טווחי מחירים
+            const ranges = {
+                '0-1000': 0,
+                '1000-5000': 0,
+                '5000-10000': 0,
+                '10000-20000': 0,
+                '20000+': 0
+            };
+            
+            prices.forEach(price => {
+                if (price <= 1000) ranges['0-1000']++;
+                else if (price <= 5000) ranges['1000-5000']++;
+                else if (price <= 10000) ranges['5000-10000']++;
+                else if (price <= 20000) ranges['10000-20000']++;
+                else ranges['20000+']++;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ranges),
+                    datasets: [{
+                        label: 'מספר מוצרים',
+                        data: Object.values(ranges),
+                        backgroundColor: '#36A2EB'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTopMallsChart() {
+            const ctx = document.getElementById('topMallsChart');
+            if (!ctx) return;
+            
+            const mallStats = {};
+            
+            productsData.forEach(p => {
+                const mall = p['מתחם'] || 'לא מוגדר';
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                
+                if (!mallStats[mall]) {
+                    mallStats[mall] = { total: 0, count: 0 };
+                }
+                
+                if (!isNaN(price) && price > 0) {
+                    mallStats[mall].total += price;
+                    mallStats[mall].count++;
+                }
+            });
+            
+            const mallAvgs = Object.entries(mallStats)
+                .filter(([_, stats]) => stats.count > 0)
+                .map(([mall, stats]) => ({
+                    mall,
+                    avg: Math.round(stats.total / stats.count)
+                }))
+                .sort((a, b) => b.avg - a.avg)
+                .slice(0, 10);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: mallAvgs.map(item => item.mall),
+                    datasets: [{
+                        label: 'מחיר ממוצע (₪)',
+                        data: mallAvgs.map(item => item.avg),
+                        backgroundColor: '#FF6384'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
 
         function clearHistory() {
             const systemMessages = messagesArea.querySelectorAll('.message.system');
@@ -611,6 +1183,12 @@
                 // עדכון רשימת המתחמים לטאב הגאנט
                 console.log('קורא לעדכון רשימת מתחמים...');
                 updateGanttMallOptions();
+                
+                // עדכון דשבורד
+                updateDashboard();
+                
+                // עדכון חיפושים שמורים
+                updateSavedSearchesDisplay();
             } catch (error) {
                 updateStatus('error', 'שגיאה בטעינה');
                 let errorHelp = '';
@@ -739,15 +1317,40 @@
             addMessage(query, 'user');
             const results = searchProducts(query);
             if (results.length === 0) {
+                currentSearchResults = [];
                 addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
             } else {
                 displayAllProductResults(results);
             }
+            
+            // אפשור כפתור השמירה אחרי חיפוש מוצלח
+            document.getElementById('saveSearchBtn').disabled = results.length === 0;
             searchInput.value = '';
         }
 
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
+        
+        // אירוע שמירת חיפוש
+        document.getElementById('saveSearchBtn').addEventListener('click', function() {
+            // שמירת החיפוש הנוכחי במקום החיפוש הקודם
+            const currentQuery = messagesArea.querySelector('.message.user:last-of-type')?.textContent.trim();
+            if (currentQuery) {
+                const searchObj = {
+                    id: Date.now(),
+                    text: currentQuery,
+                    date: new Date().toLocaleDateString('he-IL'),
+                    results_count: currentSearchResults.length
+                };
+                
+                savedSearches.unshift(searchObj);
+                if (savedSearches.length > 20) savedSearches.pop();
+                
+                localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+                updateSavedSearchesDisplay();
+                addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${currentQuery}" נשמר בהצלחה.`);
+            }
+        });
 
         // עדכון רשימת המתחמים עבור הגאנט
         function updateGanttMallOptions() {
@@ -1058,24 +1661,65 @@
 
         document.getElementById('ganttCalcBtn').addEventListener('click', calculateGanttBudget);
 
+        // פונקציית ניקוי הגאנט
+        function clearGanttForm() {
+            // נקה בחירת מתחמים
+            selectedMalls.clear();
+            updateMallsDisplay();
+            updateMallsDropdown();
+            
+            // איפוס סוג קמפיין לברירת מחדל
+            document.getElementById('ganttType').value = 'all';
+            
+            // ניקוי תקציב
+            document.getElementById('ganttBudget').value = '';
+            
+            // ניקוי תוצאות
+            document.getElementById('ganttResults').innerHTML = '';
+            
+            // הודעה למשתמש
+            const resultsDiv = document.getElementById('ganttResults');
+            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#28a745; font-weight:600;">✅ הטופס נוקה בהצלחה!</div>';
+            setTimeout(() => {
+                resultsDiv.innerHTML = '';
+            }, 2000);
+        }
+
+        document.getElementById('ganttClearBtn').addEventListener('click', clearGanttForm);
+
         // טיפול בטאבים
         const tabSearch = document.getElementById('tabSearch');
         const tabGantt = document.getElementById('tabGantt');
+        const tabDashboard = document.getElementById('tabDashboard');
         const tabSearchPanel = document.getElementById('tabSearchPanel');
         const tabGanttPanel = document.getElementById('tabGanttPanel');
+        const tabDashboardPanel = document.getElementById('tabDashboardPanel');
 
         tabSearch.onclick = function() {
             tabSearch.classList.add('active'); 
             tabGantt.classList.remove('active');
+            tabDashboard.classList.remove('active');
             tabSearchPanel.style.display = 'block'; 
             tabGanttPanel.style.display = 'none';
+            tabDashboardPanel.style.display = 'none';
         }
 
         tabGantt.onclick = function() {
             tabGantt.classList.add('active'); 
             tabSearch.classList.remove('active');
+            tabDashboard.classList.remove('active');
             tabGanttPanel.style.display = 'block'; 
             tabSearchPanel.style.display = 'none';
+            tabDashboardPanel.style.display = 'none';
+        }
+
+        tabDashboard.onclick = function() {
+            tabDashboard.classList.add('active'); 
+            tabSearch.classList.remove('active');
+            tabGantt.classList.remove('active');
+            tabDashboardPanel.style.display = 'block'; 
+            tabSearchPanel.style.display = 'none';
+            tabGanttPanel.style.display = 'none';
         }
 
         // טעינת הנתונים בעת טעינת הדף
