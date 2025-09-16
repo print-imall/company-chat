@@ -875,52 +875,74 @@
         }
 
         // אירועי דף
-        searchBtn.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', function(e) { 
-            if (e.key === 'Enter') performSearch(); 
-        });
+        if (searchBtn) {
+            searchBtn.addEventListener('click', performSearch);
+        }
         
-        document.getElementById('saveSearchBtn').addEventListener('click', function() {
-            const currentQuery = messagesArea.querySelector('.message.user:last-of-type')?.textContent.trim();
-            if (currentQuery) {
-                const searchObj = {
-                    id: Date.now(),
-                    text: currentQuery,
-                    date: new Date().toLocaleDateString('he-IL'),
-                    results_count: currentSearchResults.length
-                };
-                
-                savedSearches.unshift(searchObj);
-                if (savedSearches.length > 20) savedSearches.pop();
-                
-                localStorage.setItem('companySearches', JSON.stringify(savedSearches));
-                updateSavedSearchesDisplay();
-                addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${currentQuery}" נשמר בהצלחה.`);
-            }
-        });
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) { 
+                if (e.key === 'Enter') performSearch(); 
+            });
+        }
+        
+        const saveSearchBtn = document.getElementById('saveSearchBtn');
+        if (saveSearchBtn) {
+            saveSearchBtn.addEventListener('click', function() {
+                const currentQuery = messagesArea.querySelector('.message.user:last-of-type')?.textContent.trim();
+                if (currentQuery) {
+                    const searchObj = {
+                        id: Date.now(),
+                        text: currentQuery,
+                        date: new Date().toLocaleDateString('he-IL'),
+                        results_count: currentSearchResults.length
+                    };
+                    
+                    savedSearches.unshift(searchObj);
+                    if (savedSearches.length > 20) savedSearches.pop();
+                    
+                    localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+                    updateSavedSearchesDisplay();
+                    addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${currentQuery}" נשמר בהצלחה.`);
+                }
+            });
+        }
 
-        document.getElementById('ganttCalcBtn').addEventListener('click', calculateGanttBudget);
-        document.getElementById('ganttClearBtn').addEventListener('click', clearGanttForm);
+        const ganttCalcBtn = document.getElementById('ganttCalcBtn');
+        if (ganttCalcBtn) {
+            ganttCalcBtn.addEventListener('click', calculateGanttBudget);
+        }
+        
+        const ganttClearBtn = document.getElementById('ganttClearBtn');
+        if (ganttClearBtn) {
+            ganttClearBtn.addEventListener('click', clearGanttForm);
+        }
 
-        document.getElementById('mallsDisplay').addEventListener('click', function() {
-            const dropdown = document.getElementById('mallsDropdown');
-            const arrow = document.querySelector('.dropdown-arrow');
-            const isOpen = dropdown.style.display === 'block';
-            
-            if (isOpen) {
-                dropdown.style.display = 'none';
-                arrow.classList.remove('open');
-            } else {
-                dropdown.style.display = 'block';
-                arrow.classList.add('open');
-            }
-        });
+        const mallsDisplay = document.getElementById('mallsDisplay');
+        if (mallsDisplay) {
+            mallsDisplay.addEventListener('click', function() {
+                const dropdown = document.getElementById('mallsDropdown');
+                const arrow = document.querySelector('.dropdown-arrow');
+                if (dropdown && arrow) {
+                    const isOpen = dropdown.style.display === 'block';
+                    
+                    if (isOpen) {
+                        dropdown.style.display = 'none';
+                        arrow.classList.remove('open');
+                    } else {
+                        dropdown.style.display = 'block';
+                        arrow.classList.add('open');
+                    }
+                }
+            });
+        }
 
         document.addEventListener('click', function(e) {
             const container = document.querySelector('.multi-select-container');
             if (container && !container.contains(e.target)) {
-                document.getElementById('mallsDropdown').style.display = 'none';
-                document.querySelector('.dropdown-arrow').classList.remove('open');
+                const dropdown = document.getElementById('mallsDropdown');
+                const arrow = document.querySelector('.dropdown-arrow');
+                if (dropdown) dropdown.style.display = 'none';
+                if (arrow) arrow.classList.remove('open');
             }
         });
 
