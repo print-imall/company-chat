@@ -947,7 +947,7 @@
                     return item.matchedTermsCount >= Math.ceil(searchTerms.length / 2);
                 }
                 return item.score > 0;
-            })
+            }))
             .sort((a, b) => {
                 // First prioritize by matched terms count, then by high priority matches, then by score
                 if (a.matchedTermsCount !== b.matchedTermsCount) {
@@ -1234,6 +1234,7 @@
 
         // Initialize - load data automatically
         window.addEventListener('load', function() {
+            console.log('Page loaded, starting data load...');
             setTimeout(() => {
                 loadExcelData();
             }, 1000);
