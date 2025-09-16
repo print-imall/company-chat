@@ -345,7 +345,6 @@
         </div>
     </div>
     <div class="main-container">
-        <!-- Sidebar with Info (לא מוצג במובייל) -->
         <div class="sidebar">
             <div class="stats-card" id="statsCard" style="display: none;">
                 <div class="stats-number" id="productCount">0</div>
@@ -374,7 +373,7 @@
                         <strong>איך החיפוש עובד:</strong><br>
                         • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
                         • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
-                        • מציגה את התוצאה הטובה ביותר עם תמונה<br><br>
+                        • מציגה את כל התוצאות המתאימות<br><br>
                         <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
                         <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
                     </div>
@@ -396,9 +395,9 @@
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
                 <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
                     <div style="margin-bottom:10px;">
-                        <label><b>בחר מתחם:</b></label><br>
+                        <label><b>בחר קניון (או השאר ריק לסיכום לכל הקניונים):</b></label><br>
                         <select id="ganttMall" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
-                            <option value="">בחר...</option>
+                            <option value="">כל הקניונים</option>
                         </select>
                     </div>
                     <div style="margin-bottom:10px;">
@@ -433,6 +432,7 @@
             tabGantt.classList.add('active'); tabSearch.classList.remove('active');
             tabGanttPanel.style.display='block'; tabSearchPanel.style.display='none';
         }
+
         // CONFIG & GLOBALS
         const CONFIG = {
             githubUser: 'print-imall',
@@ -449,6 +449,7 @@
         const clearBtn = document.getElementById('clearBtn');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
+
         function updateStatus(status, text) {
             statusIndicator.className = 'status-indicator ' + status;
             let icon = '⏳';
@@ -513,7 +514,7 @@
             }
         }
 
-        // חיפוש: כל המילים בפלטפורמה (לא משנה הסדר), אח"כ הכי הרבה התאמות
+        // --- חיפוש: כל התוצאות הרלוונטיות (עד 30), לפי ניקוד חכם ---
         function searchProducts(query) {
             if (!query.trim()) return [];
             const originalQuery = query.trim();
@@ -523,22 +524,26 @@
                 const plat = String(product['פלטפורמה']||'').toLowerCase();
                 return searchTerms.every(term=>plat.includes(term));
             });
-            if(platformResults.length>0) {
-                return [{product: platformResults[0]}];
+            if(platformResults.length > 0) {
+                return platformResults.slice(0,30).map(product => ({product}));
             }
-            // 2. fallback - מצא תוצאה עם מירב המילים בכל שדה
-            let best = null, bestCount = 0;
-            productsData.forEach(product=>{
+            // 2. fallback - ניקוד לפי הופעות בכל שדה
+            let scored = productsData.map(product => {
                 let count = 0;
                 Object.values(product).forEach(val=>{
                     if(!val) return;
                     const s = String(val).toLowerCase();
                     count += searchTerms.filter(t=>s.includes(t)).length;
                 });
-                if(count>bestCount) {best=product;bestCount=count;}
-            });
-            if(best && bestCount>0) return [{product: best}];
-            return [];
+                return {product, count};
+            }).filter(obj => obj.count>0)
+              .sort((a,b)=>b.count-a.count)
+              .slice(0,30);
+            return scored.map(obj=>({product: obj.product}));
+        }
+
+        function displayAllProductResults(items) {
+            items.forEach(displayProductResult);
         }
         function displayProductResult(item) {
             const product = item.product;
@@ -602,68 +607,72 @@
             if (results.length === 0) {
                 addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
             } else {
-                displayProductResult(results[0]);
+                displayAllProductResults(results);
             }
             searchInput.value = '';
         }
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
 
-
-        // ----------- GANTT MODULE (SINGLE SELECT + BUDGET) --------------
+        // ----------- GANTT MODULE (סיכום תקציב לכל קניון) --------------
         function updateGanttMallOptions() {
             if(!window.productsData) return;
             const mallSelect = document.getElementById('ganttMall');
             const malls = Array.from(new Set(productsData.map(p=>p['מתחם']).filter(Boolean))).sort();
-            mallSelect.innerHTML = '<option value="">בחר...</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
+            mallSelect.innerHTML = '<option value="">כל הקניונים</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
         }
-        function filterGanttProducts(selectedMall, type, budget) {
-            let filtered = productsData.filter(p=>{
-                if(selectedMall && p['מתחם'] !== selectedMall) return false;
-                if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return false;
-                if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return false;
-                return true;
-            });
-            if(budget && !isNaN(budget) && budget>0) {
-                let sum = 0, limited = [];
-                for(let p of filtered) {
-                    let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
-                    if(isNaN(price)) price=0;
-                    if(sum+price > budget) break;
-                    sum += price;
-                    limited.push(p);
-                }
-                return limited;
-            }
-            return filtered;
-        }
-        function renderGanttTable(products) {
-            if(!products.length) return "<div style='color:#b00;font-weight:700'>לא נמצאו אלמנטים תואמים</div>";
-            let total = 0;
-            let rows = products.map(p=>{
+
+        // חישוב סכום לכל קניון! (לפי קמפיין ותקציב)
+        function renderGanttTableSummaryByMall(type, budget, selectedMall) {
+            // יוצרים מילון של קניון->סכום
+            let mallSums = {};
+            let allMalls = [];
+            productsData.forEach(p=>{
+                const mall = p['מתחם'];
+                if(!mall) return;
+                if(selectedMall && mall !== selectedMall) return;
+                if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return;
+                if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return;
                 let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
-                if(!isNaN(price)) total+=price;
-                return `<tr>
-                  <td>${p['פלטפורמה']||'-'}</td>
-                  <td>${p['מתחם']||'-'}</td>
-                  <td>${p['קמפיין']||'-'}</td>
-                  <td>${p['מחיר מכירה']||'-'}</td>
-                </tr>`;
-            }).join('');
+                if(isNaN(price)) price=0;
+                if(!mallSums[mall]) {
+                    mallSums[mall]=0;
+                    allMalls.push(mall);
+                }
+                mallSums[mall] += price;
+            });
+            // תקציב: הגבול המצטבר
+            if(budget && !isNaN(budget) && budget>0) {
+                // ממיין לפי mall, עוצר שמצטבר עובר תקציב
+                let sumSoFar = 0;
+                let limited = [];
+                for(let mall of allMalls) {
+                    if(sumSoFar+mallSums[mall]>budget) break;
+                    sumSoFar+=mallSums[mall];
+                    limited.push(mall);
+                }
+                allMalls = limited;
+            }
+            if(allMalls.length==0) return "<div style='color:#b00;font-weight:700'>לא נמצאו קניונים תואמים</div>";
             let tbl = `<table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
                 <thead><tr style="background:#f6f6fa">
-                  <th>פלטפורמה</th><th>מתחם</th><th>קמפיין</th><th>מחיר מכירה</th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-              </table>
-              <div style="font-weight:700;font-size:20px;color:#007bff">סך הכל: ${total.toLocaleString()} ₪</div>`;
-            let max = Math.max(...products.map(p=>Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''))||0));
-            let bars = products.map(p=>{
-                let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''))||0;
+                  <th>קניון</th><th>סך הכל תקציב</th>
+                </tr></thead><tbody>`;
+            let total = 0;
+            for(let mall of allMalls) {
+                tbl += `<tr><td>${mall}</td><td>${mallSums[mall].toLocaleString()} ₪</td></tr>`;
+                total += mallSums[mall];
+            }
+            tbl += `</tbody></table>
+                <div style="font-weight:700;font-size:20px;color:#007bff">סכום כללי: ${total.toLocaleString()} ₪</div>`;
+            // ברים ויזואלים לכל קניון
+            let max = Math.max(...allMalls.map(m=>mallSums[m]));
+            let bars = allMalls.map(mall=>{
+                let price = mallSums[mall];
                 let w = max? Math.max(8,Math.round((price/max)*100)) : 8;
                 return `<div class="gantt-bar">
                   <div class="gantt-bar-inner" style="width:${w}%;background:${w>8?'linear-gradient(92deg,#28a745,#20c997)':'#bbb'}">${price?price.toLocaleString():'-'}</div>
-                  <span class="gantt-bar-label">${p['קמפיין']||'-'} | ${p['מתחם']||'-'}</span>
+                  <span class="gantt-bar-label">${mall}</span>
                 </div>`;
             }).join('');
             return tbl + `<div style="margin-top:20px"><b>הדמיית גאנט:</b><br>${bars}</div>`;
@@ -673,8 +682,7 @@
             const selectedMall = mallSelect.value;
             const type = document.getElementById('ganttType').value;
             const budget = Number(document.getElementById('ganttBudget').value);
-            const products = filterGanttProducts(selectedMall, type, budget);
-            document.getElementById('ganttResults').innerHTML = renderGanttTable(products);
+            document.getElementById('ganttResults').innerHTML = renderGanttTableSummaryByMall(type, budget, selectedMall);
         };
         function afterLoadProductsForGantt(){ setTimeout(updateGanttMallOptions, 300);}
         window.addEventListener('load',function(){
