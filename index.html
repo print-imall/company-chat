@@ -429,6 +429,58 @@
             margin-bottom: 15px;
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
         }
+        /* הוספת גלילה אופקית לטבלאות במובייל */
+@media (max-width: 600px) {
+    .product-table, .product-table-wrapper {
+        display: block;
+        overflow-x: auto;
+        width: 100%;
+        min-width: 250px;
+    }
+    .product-table th, .product-table td {
+        white-space: nowrap;
+    }
+    .main-container {
+        flex-direction: column;
+        padding: 8px;
+    }
+    .sidebar {
+        width: 100%;
+        min-width: unset;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .product-image-compact img, .no-image-placeholder, .image-loading {
+        height: 170px;
+        min-height: 120px;
+        max-width: 100%;
+    }
+    .input-area {
+        flex-direction: column;
+        gap: 7px;
+        padding: 10px;
+    }
+    .messages-area {
+        min-height: 200px;
+        max-height: 50vh;
+        padding: 10px;
+    }
+    .header h1 {
+        font-size: 18px;
+    }
+    .stats-card, .quick-info {
+        padding: 10px;
+        font-size: 14px;
+    }
+    .search-input {
+        font-size: 15px;
+        padding: 12px;
+    }
+    .search-btn, .clear-btn {
+        font-size: 14px;
+        padding: 12px 14px;
+    }
+}
 
         /* Mobile responsiveness for compact view */
         @media (max-width: 768px) {
