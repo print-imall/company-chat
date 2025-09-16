@@ -15,7 +15,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -45,6 +45,7 @@
 
         .status-indicator.loading {
             background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1.5s infinite;
         }
 
         .status-indicator.ready {
@@ -53,6 +54,12 @@
 
         .status-indicator.error {
             background: rgba(220, 53, 69, 0.3);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         .chat-container {
@@ -65,6 +72,23 @@
             padding: 20px;
         }
 
+        .config-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            margin-top: 5px;
+        }
+
         .messages-area {
             flex: 1;
             background: rgba(255, 255, 255, 0.95);
@@ -72,7 +96,8 @@
             margin-bottom: 20px;
             padding: 20px;
             overflow-y: auto;
-            max-height: 500px;
+            min-height: 400px;
+            max-height: 60vh;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
@@ -169,6 +194,7 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
+            animation: pulse 1.5s infinite;
         }
 
         .input-area {
@@ -218,45 +244,39 @@
             transform: none;
         }
 
-        .file-upload-area {
+        .stats-bar {
             background: rgba(255, 255, 255, 0.1);
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+            padding: 10px 15px;
             border-radius: 10px;
-            padding: 20px;
+            margin-bottom: 15px;
+            color: white;
             text-align: center;
-            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
             color: white;
-        }
-
-        .upload-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 0 10px;
-        }
-
-        .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .config-section {
-            background: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            color: white;
+            margin-bottom: 15px;
         }
 
-        .config-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            margin-top: 5px;
+        @media (max-width: 768px) {
+            .product-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .product-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -264,46 +284,56 @@
     <div class="header">
         <h1>🏢 מערכת צ'אט החברה</h1>
         <div class="status-indicator loading" id="statusIndicator">
-            ⏳ מטען נתונים...
+            ⏳ טוען נתונים מ-GitHub...
         </div>
     </div>
 
     <div class="chat-container">
-        <!-- File Upload Section -->
-        <div class="file-upload-area" id="uploadArea">
-            <h3>📁 העלאת קבצים</h3>
-            <p>העלה קובץ Excel עם נתוני המוצרים</p>
-            <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
-            <button class="upload-btn" onclick="document.getElementById('excelFile').click()">
-                בחר קובץ Excel
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h3>⚙️ הגדרות מערכת</h3>
+            
+            <label>📁 שם קובץ ה-Excel (ברפוזיטורי):</label>
+            <input type="text" id="excelFileName" class="config-input" 
+                   placeholder="products.xlsx"
+                   value="products.xlsx">
+            
+            <br><br>
+            
+            <label>📷 כתובת בסיס לתמונות Dropbox:</label>
+            <input type="text" id="dropboxUrl" class="config-input" 
+                   placeholder="https://dl.dropboxusercontent.com/s/your-folder-link/">
+            
+            <br><br>
+            
+            <button onclick="loadExcelData()" id="reloadBtn" 
+                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                🔄 טען מחדש
             </button>
-            <span id="fileStatus">לא נבחר קובץ</span>
         </div>
 
-        <!-- Dropbox Configuration -->
-        <div class="config-section">
-            <h3>📷 הגדרת Dropbox</h3>
-            <label>כתובת התיקייה הציבורית ב-Dropbox:</label>
-            <input type="text" id="dropboxUrl" class="config-input" 
-                   placeholder="https://dl.dropboxusercontent.com/s/your-folder-link/"
-                   value="">
-            <small style="display: block; margin-top: 5px; opacity: 0.8;">
-                הכנס את הקישור לתיקייה הציבורית שבה נמצאות התמונות
-            </small>
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="statsBar" style="display: none;">
+            📊 מאגר הנתונים מכיל <strong id="productCount">0</strong> מוצרים
         </div>
 
         <!-- Messages Area -->
         <div class="messages-area" id="messagesArea">
             <div class="message system">
                 <strong>🤖 מערכת צ'אט מוכנה!</strong><br>
-                העלה קובץ Excel עם נתוני המוצרים והגדר את כתובת Dropbox כדי להתחיל לחפש מוצרים.
+                המערכת תטען אוטומטית את נתוני המוצרים מקובץ ה-Excel שבתיקיית GitHub.
+                <br><br>
+                <strong>הוראות:</strong>
+                <br>1. ודא שקובץ ה-Excel נמצא בתיקייה הראשית של הרפוזיטורי
+                <br>2. הגדר את כתובת Dropbox לתמונות (אופציונלי)
+                <br>3. התחל לחפש מוצרים!
             </div>
         </div>
 
         <!-- Input Area -->
         <div class="input-area">
             <input type="text" id="searchInput" class="search-input" 
-                   placeholder="חפש מוצר (לדוגמה: מקט, מתחם, פלטפורמה...)" 
+                   placeholder="חפש מוצר (מקט, מתחם, פלטפורמה...)" 
                    disabled>
             <button id="searchBtn" class="search-btn" disabled>🔍 חפש</button>
         </div>
@@ -319,9 +349,10 @@
         const messagesArea = document.getElementById('messagesArea');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
-        const excelFile = document.getElementById('excelFile');
-        const fileStatus = document.getElementById('fileStatus');
         const dropboxUrlInput = document.getElementById('dropboxUrl');
+        const excelFileNameInput = document.getElementById('excelFileName');
+        const statsBar = document.getElementById('statsBar');
+        const productCount = document.getElementById('productCount');
 
         // Update status indicator
         function updateStatus(status, text) {
@@ -338,36 +369,86 @@
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        // Handle Excel file upload
-        excelFile.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            fileStatus.textContent = `נבחר: ${file.name}`;
-            updateStatus('loading', 'קורא קובץ Excel...');
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    productsData = jsonData;
-                    updateStatus('ready', `✅ נטענו ${productsData.length} מוצרים`);
-                    addMessage(`<strong>📊 קובץ Excel נטען בהצלחה!</strong><br>נמצאו ${productsData.length} מוצרים במאגר הנתונים.`);
-                    
-                    // Enable search if dropbox is also configured
-                    checkSystemReady();
-                    
-                } catch (error) {
-                    updateStatus('error', 'שגיאה בקריאת הקובץ');
-                    addMessage(`<strong>❌ שגיאה:</strong> לא ניתן לקרוא את קובץ ה-Excel. בדוק שהקובץ תקין.`);
-                }
+        // Get current repository info from URL
+        function getRepoInfo() {
+            const currentUrl = window.location.href;
+            
+            // If running on GitHub Pages
+            if (currentUrl.includes('github.io')) {
+                const parts = currentUrl.split('/');
+                const username = parts[3].replace('.github.io', '');
+                const repoName = parts[4] || username;
+                return { username, repoName };
+            }
+            
+            // If running locally or other domain, use default
+            return { 
+                username: 'YOUR_USERNAME', 
+                repoName: 'YOUR_REPO_NAME' 
             };
-            reader.readAsArrayBuffer(file);
-        });
+        }
+
+        // Load Excel data from GitHub repository
+        async function loadExcelData() {
+            const fileName = excelFileNameInput.value.trim() || 'products.xlsx';
+            const { username, repoName } = getRepoInfo();
+            
+            updateStatus('loading', 'טוען נתונים מ-GitHub...');
+            
+            try {
+                // GitHub raw content URL
+                const githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
+                
+                const response = await fetch(githubUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                productsData = jsonData;
+                productCount.textContent = productsData.length;
+                statsBar.style.display = 'block';
+                
+                updateStatus('ready', `✅ נטענו ${productsData.length} מוצרים`);
+                addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
+                          נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
+                          קובץ: ${fileName}<br>
+                          רפוזיטורי: ${username}/${repoName}`);
+                
+                // Enable search
+                searchInput.disabled = false;
+                searchBtn.disabled = false;
+                
+                console.log('Sample data:', productsData.slice(0, 3));
+                
+            } catch (error) {
+                console.error('Error loading Excel:', error);
+                updateStatus('error', 'שגיאה בטעינת הנתונים');
+                
+                const { username, repoName } = getRepoInfo();
+                addMessage(`
+                    <div class="error-message">
+                        <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
+                        ${error.message}<br><br>
+                        
+                        <strong>בדוק את הדברים הבאים:</strong><br>
+                        1. הקובץ "${fileName}" קיים בתיקייה הראשית של הרפוזיטורי<br>
+                        2. הרפוזיטורי הוא ציבורי או שיש לך הרשאות גישה<br>
+                        3. שם הקובץ נכון (כולל סיומת .xlsx או .xls)<br>
+                        4. הקובץ נמצא ב-branch ראשי (main/master)<br><br>
+                        
+                        <strong>URL שנבדק:</strong><br>
+                        https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}
+                    </div>
+                `);
+            }
+        }
 
         // Handle Dropbox URL configuration
         dropboxUrlInput.addEventListener('input', function(e) {
@@ -375,17 +456,7 @@
             if (dropboxBaseUrl && !dropboxBaseUrl.endsWith('/')) {
                 dropboxBaseUrl += '/';
             }
-            checkSystemReady();
         });
-
-        // Check if system is ready
-        function checkSystemReady() {
-            if (productsData.length > 0 && dropboxBaseUrl) {
-                searchInput.disabled = false;
-                searchBtn.disabled = false;
-                addMessage(`<strong>🎉 המערכת מוכנה לשימוש!</strong><br>אתה יכול עכשיו לחפש מוצרים במאגר הנתונים.`);
-            }
-        }
 
         // Search function with fuzzy matching
         function searchProducts(query) {
@@ -438,7 +509,7 @@
             })
             .filter(item => item.score > 0)
             .sort((a, b) => b.score - a.score)
-            .slice(0, 5); // Return top 5 matches
+            .slice(0, 5);
         }
 
         // Display product result
@@ -511,7 +582,7 @@
                 img.onerror = function() {
                     const imageContainer = messagesArea.lastElementChild.querySelector('.image-loading');
                     if (imageContainer) {
-                        imageContainer.innerHTML = `<div style="color: rgba(255,255,255,0.7);">❌ לא נמצאה תמונה עבור מקט ${productCode}</div>`;
+                        imageContainer.innerHTML = `<div style="color: rgba(255,255,255,0.7);">📷 לא נמצאה תמונה עבור מקט ${productCode}</div>`;
                     }
                 };
                 img.src = imageUrl;
@@ -528,10 +599,10 @@
             const results = searchProducts(query);
             
             if (results.length === 0) {
-                addMessage(`<strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצאו מוצרים התואמים לחיפוש "${query}". נסה חיפוש אחר או בדוק את האיות.`);
+                addMessage(`<strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "${query}". נסה חיפוש אחר או בדוק את האיות.`);
             } else {
-                addMessage(`<strong>🎯 נמצאו ${results.length} תוצאות עבור "${query}":</strong>`);
-                results.forEach(displayProductResult);
+                // Show only the best match
+                displayProductResult(results[0]);
             }
 
             searchInput.value = '';
@@ -545,8 +616,13 @@
             }
         });
 
-        // Initialize
-        updateStatus('loading', 'מחכה לקבצים...');
+        // Initialize - load data automatically
+        window.addEventListener('load', function() {
+            // Wait a moment for the page to fully load, then load the Excel data
+            setTimeout(() => {
+                loadExcelData();
+            }, 1000);
+        });
     </script>
 </body>
 </html>
