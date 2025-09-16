@@ -7,460 +7,297 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏢</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        html, body {
+            height: 100%;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 25px;
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(10px);
+            padding: 24px 0 14px 0;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-
         .header h1 {
             color: white;
-            font-size: 32px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 11px;
         }
-
         .status-indicator {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.2);
             border-radius: 25px;
             color: white;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-
         .status-indicator.loading {
             background: linear-gradient(135deg, #ffc107, #ff8f00);
             animation: pulse 2s infinite;
         }
-
         .status-indicator.ready {
             background: linear-gradient(135deg, #28a745, #20c997);
         }
-
         .status-indicator.error {
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.7;} }
 
         .main-container {
             flex: 1;
             display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
             width: 100%;
-            padding: 20px;
-            gap: 20px;
+            padding: 0;
+            margin: 0;
+            gap: 0;
         }
-
         .sidebar {
-            width: 300px;
+            width: 285px;
+            min-width: 220px;
+            max-width: 350px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 25px 0 0 0;
         }
-
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stats-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
+        .stats-card, .quick-info {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 18px 16px;
             color: white;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
+            box-shadow: none;
         }
-
         .stats-number {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             background: linear-gradient(135deg, #fff, #f8f9fa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        .stats-label { font-size: 15px; opacity: .92; font-weight: 500;}
+        .quick-info h3 {font-size:17px;margin-bottom:10px;font-weight:600;gap:8px;display:flex;}
+        .quick-info p {margin-bottom:7px;opacity:0.92;line-height:1.5;}
 
-        .stats-label {
-            font-size: 16px;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-
-        .quick-info {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            color: white;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .quick-info h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            font-weight: 600;
+        .chat-area {
+            flex: 1;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            min-width: 0;
+            background: none;
+            margin: 0;
         }
-
-        .quick-info p {
-            margin-bottom: 10px;
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-
         .messages-area {
             flex: 1;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            margin-bottom: 20px;
-            padding: 25px;
+            background: rgba(255,255,255,0.96);
+            border-radius: 0;
+            margin-bottom: 19px;
+            padding: 30px 14px 16px 14px;
             overflow-y: auto;
-            min-height: 400px;
+            min-height: 340px;
             max-height: 65vh;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
+            box-shadow: none;
         }
-
         .message {
-            margin-bottom: 20px;
-            padding: 16px 20px;
-            border-radius: 16px;
-            max-width: 85%;
+            margin-bottom: 19px;
+            padding: 14px 15px;
+            border-radius: 13px;
+            max-width: 100%;
             word-wrap: break-word;
             position: relative;
             animation: messageSlide 0.3s ease-out;
         }
-
-        @keyframes messageSlide {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        @keyframes messageSlide {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
         .message.user {
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg,#007bff,#0056b3);
             color: white;
             margin-left: auto;
             text-align: right;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            box-shadow: none;
         }
-
         .message.system {
             background: #f8f9fa;
-            border: 1px solid #e9ecef;
             color: #495057;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-
         .product-result {
             background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
-            padding: 25px;
-            border-radius: 20px;
-            margin: 20px 0;
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 22px 13px;
+            border-radius: 12px;
+            margin: 18px 0;
+            box-shadow: none;
+            border: none;
             max-height: 400px;
             overflow-y: auto;
             transition: max-height 0.3s ease;
         }
-
-        .product-result.expanded {
-            max-height: none;
-        }
-
-        .product-compact {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .product-image-compact {
-            flex-shrink: 0;
-            width: 150px;
-        }
-
-        .product-image-compact img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .product-info-compact {
-            flex: 1;
-        }
-
-        .product-table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-        }
-
+        .product-result.expanded { max-height: none; }
+        .product-compact { display: flex; gap: 17px; align-items: flex-start;}
+        .product-image-compact {flex-shrink:0; width: 140px;}
+        .product-image-compact img {width:100%;height:110px;object-fit:cover;border-radius:10px;}
+        .product-info-compact {flex:1;}
+        .product-table-wrapper { width: 100%; overflow-x: auto;}
         .product-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 15px 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 9px;
+            margin: 12px 0;
         }
-
-        .product-table th,
-        .product-table td {
-            padding: 12px 16px;
+        .product-table th, .product-table td {
+            padding: 10px 12px;
             text-align: right;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.09);
         }
-
         .product-table th {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.15);
             font-weight: 600;
             font-size: 14px;
         }
-
-        .product-table td {
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .product-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .product-table .highlight-row {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
+        .product-table td {font-size: 15px;font-weight: 500;}
+        .product-table tr:last-child td {border-bottom: none;}
+        .product-table .highlight-row {background: rgba(255,255,255,0.12);}
         .action-buttons-product {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            justify-content: center;
+            gap: 8px;
+            margin-top: 13px;
+            justify-content: flex-end;
         }
-
-        .btn-expand {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+        .btn-expand, .btn-share {
+            padding: 7px 15px;
             border: none;
-            border-radius: 20px;
+            border-radius: 16px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
+        .btn-expand {
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
         .btn-expand:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255,255,255,0.30);
             transform: translateY(-1px);
         }
-
         .btn-share {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #25d366, #128c7e);
+            background: linear-gradient(135deg,#25d366,#128c7e);
             color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
-
         .btn-share:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+            box-shadow: none;
         }
-
         .product-details-full {
             display: none;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 12px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(255,255,255,0.13);
         }
-
-        .product-details-full.show {
-            display: block;
+        .product-details-full.show {display: block;}
+        .image-loading, .no-image-placeholder {
+            width: 100%; height: 110px;
+            background: rgba(255,255,255,0.13);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; color: #fff;
         }
-
-        .image-loading {
-            width: 100%;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            animation: pulse 1.5s infinite;
-        }
-
-        .no-image-placeholder {
-            width: 100%;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
+        .image-loading {animation: pulse 1.5s infinite;}
+        .no-image-placeholder {flex-direction:column;}
         .input-area {
             display: flex;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 13px;
+            background: rgba(255,255,255,0.97);
+            padding: 16px;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
         }
-
         .search-input {
             flex: 1;
-            padding: 16px 20px;
+            padding: 13px 14px;
             border: 2px solid #e9ecef;
-            border-radius: 25px;
+            border-radius: 23px;
             font-size: 16px;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
-
         .search-input:focus {
             border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.10);
         }
-
         .search-btn {
-            padding: 16px 30px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg,#007bff,#0056b3);
             color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
-        .search-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-        }
-
         .search-btn:disabled {
-            opacity: 0.6;
+            opacity: .65;
             cursor: not-allowed;
             transform: none;
         }
-
         .clear-btn {
-            padding: 16px 24px;
-            background: linear-gradient(135deg, #6c757d, #495057);
+            background: linear-gradient(135deg,#6c757d,#495057);
             color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
-        .clear-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        .clear-btn:hover, .search-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
         }
-
         .error-message {
             background: linear-gradient(135deg, #dc3545, #c82333);
-            border: none;
             color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+            padding: 17px;
+            border-radius: 13px;
+            margin-bottom: 12px;
         }
-
-        /* Mobile improvements */
+        /* Mobile */
         @media (max-width: 900px) {
-            .main-container { flex-direction: column; padding: 12px; gap: 10px; }
-            .sidebar { width: 100%; min-width: unset; flex-direction: column; gap: 10px;}
+            .main-container { flex-direction: column;}
+            .sidebar { width: 100%; min-width: unset; max-width: unset; padding:15px 0 0 0;}
             .chat-area { width: 100%; }
         }
         @media (max-width: 600px) {
-            .main-container { flex-direction: column; padding: 5px; }
-            .sidebar { width: 100%; gap: 6px; }
+            .main-container { flex-direction: column; padding: 0;}
+            .sidebar { width: 100%; gap: 7px;}
             .chat-area { width: 100%; }
-            .messages-area { min-height: 160px; max-height: 45vh; padding: 7px; }
-            .header { padding: 10px 3px;}
-            .header h1 { font-size: 18px; }
-            .stats-card, .quick-info { padding: 7px; font-size: 14px; }
-            .search-input { font-size: 15px; padding: 10px; }
-            .search-btn, .clear-btn { font-size: 14px; padding: 10px 8px; }
-            .product-image-compact img,
-            .no-image-placeholder,
-            .image-loading { height: 120px; min-height: 90px; max-width: 100%; }
-            .input-area { flex-direction: column; gap: 7px; padding: 8px;}
-            .product-compact { flex-direction: column; gap: 12px;}
+            .messages-area { min-height: 120px; max-height: 46vh; padding: 9px;}
+            .header { padding: 13px 2px;}
+            .header h1 { font-size: 19px;}
+            .stats-card, .quick-info { padding:6px 4px; font-size:13px;}
+            .search-input { font-size: 14px; padding: 9px;}
+            .search-btn, .clear-btn { font-size: 13px; padding:8px 7px;}
+            .product-image-compact img, .no-image-placeholder, .image-loading { height: 90px;}
+            .input-area { flex-direction: column; gap: 7px; padding: 7px;}
+            .product-compact { flex-direction: column; gap: 7px;}
             .product-table-wrapper { width: 100%; overflow-x: auto;}
-            .product-table th, .product-table td { padding: 7px 5px; font-size: 13px;}
+            .product-table th, .product-table td { padding: 6px 3px; font-size: 12px;}
         }
-
-        /* Scrollbar Styling */
-        .messages-area::-webkit-scrollbar { width: 8px; }
-        .messages-area::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
-        .messages-area::-webkit-scrollbar-thumb { background: rgba(0, 123, 255, 0.3); border-radius: 10px; }
-        .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(0, 123, 255, 0.5); }
+        .messages-area::-webkit-scrollbar { width: 8px;}
+        .messages-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.07); border-radius: 10px;}
+        .messages-area::-webkit-scrollbar-thumb { background: rgba(0,123,255,0.21); border-radius: 10px;}
+        .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(0,123,255,0.33);}
     </style>
 </head>
 <body>
@@ -471,7 +308,6 @@
             <span>טוען נתונים...</span>
         </div>
     </div>
-
     <div class="main-container">
         <!-- Sidebar with Info -->
         <div class="sidebar">
@@ -480,7 +316,6 @@
                 <div class="stats-number" id="productCount">0</div>
                 <div class="stats-label">מוצרים במאגר</div>
             </div>
-
             <!-- Quick Info -->
             <div class="quick-info">
                 <h3>💡 מידע מהיר</h3>
@@ -493,7 +328,6 @@
                 <p><strong>📷 תמונות:</strong> מוצגות אוטומטית לפי מספר המקט</p>
             </div>
         </div>
-
         <!-- Chat Area -->
         <div class="chat-area">
             <!-- Messages Area -->
@@ -524,7 +358,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // Configuration - Fixed settings
         const CONFIG = {
@@ -537,7 +370,6 @@
 
         // Global variables
         let productsData = [];
-        
         // DOM elements
         const statusIndicator = document.getElementById('statusIndicator');
         const messagesArea = document.getElementById('messagesArea');
@@ -546,7 +378,6 @@
         const clearBtn = document.getElementById('clearBtn');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
-
         function updateStatus(status, text) {
             const statusEl = document.getElementById('statusIndicator');
             statusEl.className = 'status-indicator ' + status;
@@ -555,17 +386,13 @@
             else if (status === 'error') icon = '❌';
             statusEl.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
         }
-
         function clearHistory() {
             const systemMessages = messagesArea.querySelectorAll('.message.system');
             const firstSystemMessage = systemMessages[0];
             messagesArea.innerHTML = '';
-            if (firstSystemMessage) {
-                messagesArea.appendChild(firstSystemMessage);
-            }
+            if (firstSystemMessage) { messagesArea.appendChild(firstSystemMessage);}
             addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
         }
-
         function addMessage(content, type) {
             type = type || 'system';
             const message = document.createElement('div');
@@ -574,11 +401,9 @@
             messagesArea.appendChild(message);
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
-
         function generateImageUrl(productCode) {
             return CONFIG.imageBaseUrl + productCode + '.jpg';
         }
-
         async function loadExcelData() {
             updateStatus('loading', 'מתחיל טעינה...');
             const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
@@ -616,7 +441,6 @@
                 addMessage('<div class="error-message"><strong>❌ שגיאה בטעינת הנתונים:</strong><br>' + error.message + '<br><br>' + errorHelp + '</div>');
             }
         }
-
         function searchProducts(query) {
             if (!query.trim()) return [];
             const originalQuery = query.trim();
@@ -725,7 +549,6 @@
             .slice(0, 1);
             return generalResults;
         }
-
         function displayProductResult(item) {
             const product = item.product;
             const score = item.score;
@@ -778,7 +601,6 @@
             img.onerror = function() { if (imageContainer) imageContainer.innerHTML = '<div class="no-image-placeholder"><span style="font-size: 20px;">📷</span><br><strong>אין תמונה</strong><br><small>מקט: ' + productCode + '</small></div>'; };
             img.src = imageUrl;
         }
-
         function toggleProductDetails(productId) {
             const productResult = document.getElementById(productId);
             const detailsSection = document.getElementById(productId + '-details');
@@ -793,13 +615,11 @@
                 expandButton.innerHTML = '📋 סגור פרטים';
             }
         }
-
         // שיתוף עם טבלת מידות בווטסאפ
         function shareProduct(productId, productCode) {
             const productResult = document.getElementById(productId);
             const table = productResult.querySelector('.product-table');
             if (!table) return;
-
             // שלב 1: חלק עיקרי
             const rows = table.querySelectorAll('tr');
             let productText = '📦 *פרטי מוצר - מק"ט: ' + productCode + '*\n\n';
@@ -812,7 +632,6 @@
                     productText += '*' + label + ':* ' + value + '\n';
                 }
             });
-
             // שלב 2: טבלת מידות
             const detailsSection = document.getElementById(productId + '-details');
             if (detailsSection) {
@@ -838,17 +657,14 @@
                     }
                 }
             }
-
             // תמונה ולוגו
             const imageUrl = generateImageUrl(productCode);
             productText += '\n📷 *תמונה:* ' + imageUrl;
             productText += '\n\n---\n📡 נשלח ממערכת צ\'אט החברה';
-
             const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
             window.open(whatsappUrl, '_blank');
             addMessage('<strong>📱 שיתוף בוואטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לוואטסאפ!<br><small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
         }
-
         function performSearch() {
             const query = searchInput.value.trim();
             if (!query) return;
@@ -861,13 +677,9 @@
             }
             searchInput.value = '';
         }
-
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
-
-        window.addEventListener('load', function() {
-            setTimeout(function() { loadExcelData(); }, 1000);
-        });
+        window.addEventListener('load', function() { setTimeout(function() { loadExcelData(); }, 700);});
     </script>
 </body>
 </html>
