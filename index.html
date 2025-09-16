@@ -7,14 +7,359 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏢</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* ... (כל העיצוב שלך ללא שינוי) ... */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            padding: 24px 0 14px 0;
+            text-align: center;
+        }
+        .header h1 {
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 11px;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .status-indicator.loading { background: linear-gradient(135deg, #ffc107, #ff8f00); animation: pulse 2s infinite; }
+        .status-indicator.ready { background: linear-gradient(135deg, #28a745, #20c997);}
+        .status-indicator.error {background: linear-gradient(135deg, #dc3545, #c82333);}
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.7;} }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar {
+            width: 285px;
+            min-width: 220px;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 25px 0 0 0;
+            transition: transform 0.3s;
+        }
+        .stats-card, .quick-info {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 18px 16px;
+            color: white;
+            border: none;
+            box-shadow: none;
+        }
+        .stats-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stats-label { font-size: 15px; opacity: .92; font-weight: 500;}
+        .quick-info h3 {font-size:17px;margin-bottom:10px;font-weight:600;gap:8px;display:flex;}
+        .quick-info p {margin-bottom:7px;opacity:0.92;line-height:1.5;}
+
+        .tabs-area {
+            width:100%;
+            display:flex;
+            gap:8px;
+            margin-bottom:14px;
+            background: none;
+            padding-right: 10px;
+        }
+        .tab-btn {
+            background: #f6f7fd;
+            color: #333;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 13px 28px;
+            cursor: pointer;
+            margin-bottom: -1px;
+            border-bottom: 2.5px solid transparent;
+            transition: background 0.2s, border-bottom 0.2s, color 0.2s;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #4242af;
+            border-bottom: 2.5px solid #4242af;
+        }
+        .tab-panel { width: 100%; }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: none;
+            margin: 0;
+        }
+        .messages-area {
+            flex: 1;
+            background: rgba(255,255,255,0.96);
+            border-radius: 14px;
+            margin-bottom: 19px;
+            padding: 30px 14px 16px 14px;
+            overflow-y: auto;
+            min-height: 340px;
+            border: 1.7px solid #d7d7ef;
+            box-shadow: 0 2px 14px 2px rgba(80,80,160,0.06);
+            transition: border 0.2s;
+        }
+        .message {
+            margin-bottom: 19px;
+            padding: 14px 15px;
+            border-radius: 13px;
+            max-width: 100%;
+            word-wrap: break-word;
+            position: relative;
+            animation: messageSlide 0.3s ease-out;
+        }
+        @keyframes messageSlide {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+        .message.user {
+            background: linear-gradient(135deg,#007bff,#0056b3);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+            box-shadow: none;
+        }
+        .message.system {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        .product-result {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 24px 16px;
+            border-radius: 14px;
+            margin: 18px 0;
+            box-shadow: none;
+            border: none;
+        }
+        .product-compact { display: flex; gap: 32px; align-items: flex-start;}
+        .product-image-compact {
+            flex-shrink: 0;
+            width: 225px;
+            max-width: 100vw;
+            display: flex;
+            justify-content: center;
+        }
+        .product-image-compact img {
+            width: 210px;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 17px;
+            background: #fff;
+            border: 1.5px solid #ddd;
+            box-shadow: 0 2px 13px 0 rgba(80,80,160,0.08);
+        }
+        .product-info-compact {flex:1;}
+        .product-table-wrapper { width: 100%; overflow-x: auto;}
+        .product-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 9px;
+            margin: 12px 0;
+        }
+        .product-table th, .product-table td {
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255,255,255,0.09);
+        }
+        .product-table th {
+            background: rgba(255,255,255,0.15);
+            font-weight: 600;
+            font-size: 15px;
+            min-width: 85px;
+        }
+        .product-table td {font-size: 16.5px;font-weight: 500;}
+        .product-table tr:last-child td {border-bottom: none;}
+        .product-table .highlight-row {background: rgba(255,255,255,0.12);}
+        .action-buttons-product {
+            display: flex;
+            gap: 14px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+        .btn-share {
+            padding: 16px 36px;
+            border: none;
+            border-radius: 22px;
+            font-size: 19px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg,#25d366,#128c7e);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 9px 0 rgba(40,167,69,0.10);
+            transition: all 0.2s;
+        }
+        .btn-share:hover {transform: translateY(-1px); box-shadow: 0 4px 13px 0 rgba(40,167,69,0.13);}
+        .input-area {
+            display: flex;
+            gap: 18px;
+            background: rgba(255,255,255,0.97);
+            padding: 24px 12px 24px 12px;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+        }
+        .search-input {
+            flex: 1;
+            padding: 18px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 27px;
+            font-size: 21px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.10);
+        }
+        .search-btn, .clear-btn {
+            padding: 18px 32px;
+            font-size: 21px;
+            font-weight: 700;
+            border-radius: 27px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .search-btn {
+            background: linear-gradient(135deg,#007bff,#0056b3);
+            color: white;
+            margin-right: 4px;
+        }
+        .search-btn:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .clear-btn {
+            background: linear-gradient(135deg,#6c757d,#495057);
+            color: white;
+        }
+        .clear-btn:hover, .search-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+        .error-message {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 17px;
+            border-radius: 13px;
+            margin-bottom: 12px;
+        }
+        /* גאנט */
+        .gantt-bar {
+            margin:8px 0 2px 0;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+        .gantt-bar-inner {
+            min-width:28px;
+            height:26px;
+            background:linear-gradient(92deg,#28a745,#20c997);
+            border-radius:7px;
+            text-align:center;
+            padding-top:3px;
+            font-weight:600;
+            color:#fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gantt-bar-label {
+            font-size:15px;
+            color:#222;
+        }
+        @media (max-width: 900px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; min-width: unset; max-width: unset; padding:10px 0 0 0;}
+            .chat-area { width: 100%; }
+        }
+        @media (max-width: 700px) {
+            .sidebar { display: none; }
+            .main-container { flex-direction: column;}
+            .tabs-area {padding-right: 0;}
+            .messages-area {
+                border: 1.5px solid #b1b1d2;
+                border-radius: 10px;
+                box-shadow: 0 1px 7px 1px rgba(80,80,160,0.04);
+                min-height: 180px;
+                padding: 14px 2vw 8px 2vw;
+            }
+            .input-area { flex-direction: column; gap: 13px; padding: 12px;}
+            .product-compact { flex-direction: column; gap: 12px;}
+            .product-image-compact img { width: 99vw; max-width: 99vw; height: 180px;}
+            .btn-share, .search-btn, .clear-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 20px;
+            }
+        }
+        .messages-area::-webkit-scrollbar { width: 8px;}
+        .messages-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.07); border-radius: 10px;}
+        .messages-area::-webkit-scrollbar-thumb { background: rgba(0,123,255,0.21); border-radius: 10px;}
+        .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(0,123,255,0.33);}
     </style>
 </head>
 <body>
-    <!-- ... (ה-HTML שלך ללא שינוי) ... -->
+    <div class="header">
+        <h1>🏢 מערכת צ'אט החברה</h1>
+        <div class="status-indicator loading" id="statusIndicator">
+            <span>⏳</span>
+            <span>טוען נתונים...</span>
+        </div>
+    </div>
     <div class="main-container">
         <div class="sidebar">
-            <!-- ... (כמו קודם) ... -->
+            <div class="stats-card" id="statsCard" style="display: none;">
+                <div class="stats-number" id="productCount">0</div>
+                <div class="stats-label">מוצרים במאגר</div>
+            </div>
+            <div class="quick-info">
+                <h3>💡 מידע מהיר</h3>
+                <p><strong>🎯 חיפוש חכם:</strong> החיפוש מתחיל בפלטפורמה ואז עובר לשדות אחרים</p>
+                <p><strong>🔍 דוגמאות חיפוש:</strong></p>
+                <p>• שם פלטפורמה</p>
+                <p>• מספר מקט</p>
+                <p>• שם מתחם</p>
+                <p>• שם קמפיין</p>
+                <p><strong>📷 תמונות:</strong> מוצגות אוטומטית לפי מספר המקט</p>
+            </div>
         </div>
         <div class="chat-area">
             <div class="tabs-area">
@@ -22,7 +367,30 @@
                 <button id="tabGantt" class="tab-btn">📊 גאנט תקציב</button>
             </div>
             <div id="tabSearchPanel" class="tab-panel" style="display:block;">
-                <!-- ... (כל שאר טאב החיפוש) ... -->
+                <div class="messages-area" id="messagesArea">
+                    <div class="message system">
+                        <strong>🤖 ברוכים הבאים למערכת חיפוש מוצרים!</strong><br><br>
+                        <strong>איך החיפוש עובד:</strong><br>
+                        • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
+                        • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
+                        • מציגה את כל התוצאות המתאימות<br><br>
+                        <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
+                        <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="חפש מוצר (פלטפורמה, מקט, מתחם, קמפיין...)"
+                        disabled>
+                    <button id="searchBtn" class="search-btn" disabled>
+                        <span>🔍</span>
+                        <span>חפש</span>
+                    </button>
+                    <button id="clearBtn" class="clear-btn" onclick="clearHistory()">
+                        <span>🗑️</span>
+                        <span>נקה</span>
+                    </button>
+                </div>
             </div>
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
                 <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
@@ -32,62 +400,74 @@
                             <option value="">כל הקניונים</option>
                         </select>
                     </div>
-                    <!-- ... (שאר הטאב) ... -->
+                    <div style="margin-bottom:10px;">
+                        <label><b>סוג קמפיין:</b></label>
+                        <select id="ganttType" style="font-size:16px;border-radius:7px;border:1px solid #bbb;padding:5px;">
+                            <option value="all">משולב (הכל)</option>
+                            <option value="פרינט">פרינט</option>
+                            <option value="דיגיטלי">דיגיטלי</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label><b>הזן תקציב (₪):</b></label><br>
+                        <input type="number" id="ganttBudget" min="0" step="1" placeholder="הכנס תקציב" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
+                    </div>
+                    <button id="ganttCalcBtn" style="padding:14px 38px;font-size:18px;font-weight:700;border-radius:16px;background:linear-gradient(95deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;margin-bottom:20px;">חשב תקציב</button>
+                    <div id="ganttResults"></div>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        // ... (כל שאר הקוד שלך) ...
-
-        function updateGanttMallOptions() {
-            // לוג לפני הכל
-            console.log('קריאה ל-updateGanttMallOptions');
-            if(!window.productsData) {
-                console.log('productsData לא מוגדר');
-                return;
-            }
-            if(!Array.isArray(productsData)) {
-                console.log('productsData הוא לא מערך:', productsData);
-                return;
-            }
-            if(productsData.length === 0) {
-                console.log('productsData ריק!');
-                return;
-            }
-            console.log('productsData:', productsData.slice(0, 5), '...סה"כ:', productsData.length);
-
-            // בדוק מה המפתחות של השורה הראשונה (שורת כותרת)
-            if(productsData.length > 0) {
-                console.log('מפתחות של שורה ראשונה:', Object.keys(productsData[0]));
-            }
-
-            const mallSelect = document.getElementById('ganttMall');
-            if(!mallSelect) {
-                console.log('לא נמצא select עם id=ganttMall');
-                return;
-            }
-            // לוג לפני מיפוי
-            const allMalls = productsData.map(p=>p['מתחם']);
-            console.log('כל הערכים בעמודת מתחם:', allMalls);
-
-            const malls = Array.from(new Set(allMalls.filter(Boolean))).sort();
-            console.log('המתחמים הייחודיים:', malls);
-
-            mallSelect.innerHTML = '<option value="">כל הקניונים</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
-            // לוג אחרי מילוי הרשימה
-            console.log('תוכן הרשימה (innerHTML):', mallSelect.innerHTML);
+        // --- פונקציית סטטוס --- (חובה בראש)
+        function updateStatus(status, text) {
+            var statusIndicator = document.getElementById('statusIndicator');
+            if (!statusIndicator) return;
+            statusIndicator.className = 'status-indicator ' + status;
+            let icon = '⏳';
+            if (status === 'ready') icon = '✅';
+            else if (status === 'error') icon = '❌';
+            statusIndicator.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
         }
 
-        // (שאר הפונקציות שלך ללא שינוי)
+        // --- משתנים גלובליים וקונפיג ---
+        const CONFIG = {
+            githubUser: 'print-imall',
+            githubRepo: 'company-chat',
+            excelFile: 'products.xlsx',
+            imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
+            imageFormat: 'direct'
+        };
+        let productsData = [];
+        const statusIndicator = document.getElementById('statusIndicator');
+        const messagesArea = document.getElementById('messagesArea');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statsCard = document.getElementById('statsCard');
+        const productCount = document.getElementById('productCount');
 
-        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallOptions, 300);}
-        window.addEventListener('load',function(){
-            setTimeout(function() { loadExcelData(); }, 700);
-            afterLoadProductsForGantt();
-        });
+        // --- פונקציות עזר ---
+        function clearHistory() {
+            const systemMessages = messagesArea.querySelectorAll('.message.system');
+            const firstSystemMessage = systemMessages[0];
+            messagesArea.innerHTML = '';
+            if (firstSystemMessage) { messagesArea.appendChild(firstSystemMessage);}
+            addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
+        }
+        function addMessage(content, type) {
+            type = type || 'system';
+            const message = document.createElement('div');
+            message.className = 'message ' + type;
+            message.innerHTML = content;
+            messagesArea.appendChild(message);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        function generateImageUrl(productCode) {
+            return CONFIG.imageBaseUrl + productCode + '.jpg';
+        }
 
-        // תוסיף לוגים גם בטעינת אקסל
+        // --- טעינת נתוני אקסל ---
         async function loadExcelData() {
             updateStatus('loading', 'מתחיל טעינה...');
             const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
@@ -106,12 +486,12 @@
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 if (jsonData.length === 0) throw new Error('הקובץ לא מכיל נתונים');
                 productsData = jsonData;
-                console.log('productsData נטען בהצלחה. מספר רשומות:', productsData.length);
+                // לוגים חשובים!
+                console.log('productsData:', productsData.slice(0,5), 'סה"כ:', productsData.length);
                 if(productsData.length > 0){
                     console.log('מפתחות דוגמה:', Object.keys(productsData[0]));
                     console.log('ערך "מתחם" ראשון:', productsData[0]['מתחם']);
                 }
-                // ... (שאר הקוד שלך)
                 productCount.textContent = productsData.length;
                 statsCard.style.display = 'block';
                 updateStatus('ready', 'מוכן! ' + productsData.length + ' מוצרים');
@@ -132,6 +512,216 @@
                 addMessage('<div class="error-message"><strong>❌ שגיאה בטעינת הנתונים:</strong><br>' + error.message + '<br><br>' + errorHelp + '</div>');
             }
         }
+
+        // --- טאב חיפוש: כל התוצאות ---
+        function searchProducts(query) {
+            if (!query.trim()) return [];
+            const originalQuery = query.trim();
+            const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(t=>t.length>0);
+            const platformResults = productsData.filter(product=>{
+                const plat = String(product['פלטפורמה']||'').toLowerCase();
+                return searchTerms.every(term=>plat.includes(term));
+            });
+            if(platformResults.length > 0) {
+                return platformResults.slice(0,30).map(product => ({product}));
+            }
+            // fallback - ניקוד
+            let scored = productsData.map(product => {
+                let count = 0;
+                Object.values(product).forEach(val=>{
+                    if(!val) return;
+                    const s = String(val).toLowerCase();
+                    count += searchTerms.filter(t=>s.includes(t)).length;
+                });
+                return {product, count};
+            }).filter(obj => obj.count>0)
+              .sort((a,b)=>b.count-a.count)
+              .slice(0,30);
+            return scored.map(obj=>({product: obj.product}));
+        }
+        function displayAllProductResults(items) {
+            items.forEach(displayProductResult);
+        }
+        function displayProductResult(item) {
+            const product = item.product;
+            const productCode = product['מקט'] || 'לא זמין';
+            const imageUrl = generateImageUrl(productCode);
+            let html = '<div class="product-result">';
+            html += '<div class="product-compact">';
+            html += '<div class="product-image-compact">';
+            html += `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}" onerror="this.onerror=null;this.src='';this.alt='אין תמונה';" style="background:#fff" />`;
+            html += '</div>';
+            html += '<div class="product-info-compact">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+            html += '<h3 style="margin: 0; font-size: 21px;">מקט: ' + productCode + '</h3>';
+            html += '</div>';
+            html += '<div class="product-table-wrapper"><table class="product-table"><tbody>';
+            html += '<tr class="highlight-row"><th>פלטפורמה</th><td><strong>' + (product['פלטפורמה'] || 'לא זמין') + '</strong></td></tr>';
+            html += '<tr><th>מתחם</th><td>' + (product['מתחם'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>מחיר מכירה</th><td>' + (product['מחיר מכירה'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>קמפיין</th><td>' + (product['קמפיין'] || 'לא זמין') + '</td></tr>';
+            html += `<tr><th>גובה</th><td>${product['גובה']||'-'}</td></tr>`;
+            html += `<tr><th>רוחב</th><td>${product['רוחב']||'-'}</td></tr>`;
+            html += '<tr><th>מספר מבקרים</th><td>' + (product['מבקרים'] || '-') + '</td></tr>';
+            html += '</tbody></table></div>';
+            html += '<div class="action-buttons-product">';
+            html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בוואטסאפ</button>';
+            html += '</div></div></div></div>';
+            addMessage(html);
+        }
+        function shareProduct(productCode) {
+            const allMsgs = Array.from(messagesArea.querySelectorAll('.product-result'));
+            let prodDiv = null;
+            allMsgs.forEach(div=>{
+                if(div.innerHTML.includes('מקט: '+productCode)) prodDiv=div;
+            });
+            if(!prodDiv) return;
+            const table = prodDiv.querySelector('.product-table');
+            if (!table) return;
+            const rows = table.querySelectorAll('tr');
+            let productText = '📦 *פרטי מוצר - מק"ט: ' + productCode + '*\n\n';
+            rows.forEach(row => {
+                const th = row.querySelector('th');
+                const td = row.querySelector('td');
+                if (th && td) {
+                    const label = th.textContent.trim();
+                    const value = td.textContent.trim();
+                    productText += '*' + label + ':* ' + value + '\n';
+                }
+            });
+            const imageUrl = generateImageUrl(productCode);
+            productText += '\n📷 *תמונה:* ' + imageUrl;
+            productText += '\n\n—\n📡 נשלח ממערכת צ\'אט החברה';
+            const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
+            window.open(whatsappUrl, '_blank');
+            addMessage('<strong>📱 שיתוף בוואטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לוואטסאפ!<br><small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
+        }
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            addMessage(query, 'user');
+            const results = searchProducts(query);
+            if (results.length === 0) {
+                addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
+            } else {
+                displayAllProductResults(results);
+            }
+            searchInput.value = '';
+        }
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
+
+        // --- גאנט: עדכון רשימת מתחמים עם לוגים ---
+        function updateGanttMallOptions() {
+            console.log('קריאה ל-updateGanttMallOptions');
+            if(!window.productsData) {
+                console.log('productsData לא מוגדר');
+                return;
+            }
+            if(!Array.isArray(productsData)) {
+                console.log('productsData הוא לא מערך:', productsData);
+                return;
+            }
+            if(productsData.length === 0) {
+                console.log('productsData ריק!');
+                return;
+            }
+            console.log('productsData:', productsData.slice(0, 5), '...סה"כ:', productsData.length);
+            if(productsData.length > 0) {
+                console.log('מפתחות של שורה ראשונה:', Object.keys(productsData[0]));
+            }
+            const mallSelect = document.getElementById('ganttMall');
+            if(!mallSelect) {
+                console.log('לא נמצא select עם id=ganttMall');
+                return;
+            }
+            const allMalls = productsData.map(p=>p['מתחם']);
+            console.log('כל הערכים בעמודת מתחם:', allMalls);
+            const malls = Array.from(new Set(allMalls.filter(Boolean))).sort();
+            console.log('המתחמים הייחודיים:', malls);
+            mallSelect.innerHTML = '<option value="">כל הקניונים</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
+            console.log('תוכן הרשימה (innerHTML):', mallSelect.innerHTML);
+        }
+
+        // --- גאנט: סיכום תקציב לכל קניון ---
+        function renderGanttTableSummaryByMall(type, budget, selectedMall) {
+            let mallSums = {};
+            let allMalls = [];
+            productsData.forEach(p=>{
+                const mall = p['מתחם'];
+                if(!mall) return;
+                if(selectedMall && mall !== selectedMall) return;
+                if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return;
+                if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return;
+                let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
+                if(isNaN(price)) price=0;
+                if(!mallSums[mall]) {
+                    mallSums[mall]=0;
+                    allMalls.push(mall);
+                }
+                mallSums[mall] += price;
+            });
+            if(budget && !isNaN(budget) && budget>0) {
+                let sumSoFar = 0;
+                let limited = [];
+                for(let mall of allMalls) {
+                    if(sumSoFar+mallSums[mall]>budget) break;
+                    sumSoFar+=mallSums[mall];
+                    limited.push(mall);
+                }
+                allMalls = limited;
+            }
+            if(allMalls.length==0) return "<div style='color:#b00;font-weight:700'>לא נמצאו קניונים תואמים</div>";
+            let tbl = `<table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+                <thead><tr style="background:#f6f6fa">
+                  <th>קניון</th><th>סך הכל תקציב</th>
+                </tr></thead><tbody>`;
+            let total = 0;
+            for(let mall of allMalls) {
+                tbl += `<tr><td>${mall}</td><td>${mallSums[mall].toLocaleString()} ₪</td></tr>`;
+                total += mallSums[mall];
+            }
+            tbl += `</tbody></table>
+                <div style="font-weight:700;font-size:20px;color:#007bff">סכום כללי: ${total.toLocaleString()} ₪</div>`;
+            let max = Math.max(...allMalls.map(m=>mallSums[m]));
+            let bars = allMalls.map(mall=>{
+                let price = mallSums[mall];
+                let w = max? Math.max(8,Math.round((price/max)*100)) : 8;
+                return `<div class="gantt-bar">
+                  <div class="gantt-bar-inner" style="width:${w}%;background:${w>8?'linear-gradient(92deg,#28a745,#20c997)':'#bbb'}">${price?price.toLocaleString():'-'}</div>
+                  <span class="gantt-bar-label">${mall}</span>
+                </div>`;
+            }).join('');
+            return tbl + `<div style="margin-top:20px"><b>הדמיית גאנט:</b><br>${bars}</div>`;
+        }
+        document.getElementById('ganttCalcBtn').onclick = function(){
+            const mallSelect = document.getElementById('ganttMall');
+            const selectedMall = mallSelect.value;
+            const type = document.getElementById('ganttType').value;
+            const budget = Number(document.getElementById('ganttBudget').value);
+            document.getElementById('ganttResults').innerHTML = renderGanttTableSummaryByMall(type, budget, selectedMall);
+        };
+
+        // --- Tabs ---
+        const tabSearch = document.getElementById('tabSearch');
+        const tabGantt = document.getElementById('tabGantt');
+        const tabSearchPanel = document.getElementById('tabSearchPanel');
+        const tabGanttPanel = document.getElementById('tabGanttPanel');
+        tabSearch.onclick = function(){
+            tabSearch.classList.add('active'); tabGantt.classList.remove('active');
+            tabSearchPanel.style.display='block'; tabGanttPanel.style.display='none';
+        }
+        tabGantt.onclick = function(){
+            tabGantt.classList.add('active'); tabSearch.classList.remove('active');
+            tabGanttPanel.style.display='block'; tabSearchPanel.style.display='none';
+        }
+
+        // --- הפעלה אוטומטית ---
+        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallOptions, 300);}
+        window.addEventListener('load',function(){
+            setTimeout(function() { loadExcelData(); }, 700);
+            afterLoadProductsForGantt();
+        });
     </script>
 </body>
 </html>
