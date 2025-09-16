@@ -86,6 +86,33 @@
         .quick-info h3 {font-size:17px;margin-bottom:10px;font-weight:600;gap:8px;display:flex;}
         .quick-info p {margin-bottom:7px;opacity:0.92;line-height:1.5;}
 
+        .tabs-area {
+            width:100%;
+            display:flex;
+            gap:8px;
+            margin-bottom:14px;
+            background: none;
+            padding-right: 10px;
+        }
+        .tab-btn {
+            background: #f6f7fd;
+            color: #333;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 13px 28px;
+            cursor: pointer;
+            margin-bottom: -1px;
+            border-bottom: 2.5px solid transparent;
+            transition: background 0.2s, border-bottom 0.2s, color 0.2s;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #4242af;
+            border-bottom: 2.5px solid #4242af;
+        }
+        .tab-panel { width: 100%; }
         .chat-area {
             flex: 1;
             display: flex;
@@ -135,7 +162,6 @@
             margin: 18px 0;
             box-shadow: none;
             border: none;
-            /* אין max-height ואין overflow */
         }
         .product-compact { display: flex; gap: 32px; align-items: flex-start;}
         .product-image-compact {
@@ -255,6 +281,30 @@
             border-radius: 13px;
             margin-bottom: 12px;
         }
+        /* גאנט */
+        .gantt-bar {
+            margin:8px 0 2px 0;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+        .gantt-bar-inner {
+            min-width:28px;
+            height:26px;
+            background:linear-gradient(92deg,#28a745,#20c997);
+            border-radius:7px;
+            text-align:center;
+            padding-top:3px;
+            font-weight:600;
+            color:#fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gantt-bar-label {
+            font-size:15px;
+            color:#222;
+        }
         @media (max-width: 900px) {
             .main-container { flex-direction: column; }
             .sidebar { width: 100%; min-width: unset; max-width: unset; padding:10px 0 0 0;}
@@ -263,6 +313,7 @@
         @media (max-width: 700px) {
             .sidebar { display: none; }
             .main-container { flex-direction: column;}
+            .tabs-area {padding-right: 0;}
             .messages-area {
                 border: 1.5px solid #b1b1d2;
                 border-radius: 10px;
@@ -312,34 +363,71 @@
             </div>
         </div>
         <div class="chat-area">
-            <div class="messages-area" id="messagesArea">
-                <div class="message system">
-                    <strong>🤖 ברוכים הבאים למערכת חיפוש מוצרים!</strong><br><br>
-                    <strong>איך החיפוש עובד:</strong><br>
-                    • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
-                    • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
-                    • מציגה את התוצאה הטובה ביותר עם תמונה<br><br>
-                    <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
-                    <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
+            <div class="tabs-area">
+                <button id="tabSearch" class="tab-btn active">🔍 חיפוש</button>
+                <button id="tabGantt" class="tab-btn">📊 גאנט תקציב</button>
+            </div>
+            <div id="tabSearchPanel" class="tab-panel" style="display:block;">
+                <div class="messages-area" id="messagesArea">
+                    <div class="message system">
+                        <strong>🤖 ברוכים הבאים למערכת חיפוש מוצרים!</strong><br><br>
+                        <strong>איך החיפוש עובד:</strong><br>
+                        • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
+                        • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
+                        • מציגה את התוצאה הטובה ביותר עם תמונה<br><br>
+                        <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
+                        <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="חפש מוצר (פלטפורמה, מקט, מתחם, קמפיין...)"
+                        disabled>
+                    <button id="searchBtn" class="search-btn" disabled>
+                        <span>🔍</span>
+                        <span>חפש</span>
+                    </button>
+                    <button id="clearBtn" class="clear-btn" onclick="clearHistory()">
+                        <span>🗑️</span>
+                        <span>נקה</span>
+                    </button>
                 </div>
             </div>
-            <div class="input-area">
-                <input type="text" id="searchInput" class="search-input"
-                       placeholder="חפש מוצר (פלטפורמה, מקט, מתחם, קמפיין...)"
-                       disabled>
-                <button id="searchBtn" class="search-btn" disabled>
-                    <span>🔍</span>
-                    <span>חפש</span>
-                </button>
-                <button id="clearBtn" class="clear-btn" onclick="clearHistory()">
-                    <span>🗑️</span>
-                    <span>נקה</span>
-                </button>
+            <div id="tabGanttPanel" class="tab-panel" style="display:none;">
+                <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
+                    <div style="margin-bottom:10px;">
+                        <label><b>בחר קניונים:</b></label><br>
+                        <select id="ganttMalls" multiple style="width:100%;min-height:90px;font-size:15px;border-radius:7px;border:1px solid #bbb;padding:6px;"></select>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label><b>סוג קמפיין:</b></label>
+                        <select id="ganttType" style="font-size:16px;border-radius:7px;border:1px solid #bbb;padding:5px;">
+                            <option value="all">משולב (הכל)</option>
+                            <option value="פרינט">פרינט</option>
+                            <option value="דיגיטלי">דיגיטלי</option>
+                        </select>
+                    </div>
+                    <button id="ganttCalcBtn" style="padding:14px 38px;font-size:18px;font-weight:700;border-radius:16px;background:linear-gradient(95deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;margin-bottom:20px;">חשב תקציב</button>
+                    <div id="ganttResults"></div>
+                </div>
             </div>
         </div>
     </div>
     <script>
-        // הגדרות
+        // TAB SWITCH LOGIC
+        const tabSearch = document.getElementById('tabSearch');
+        const tabGantt = document.getElementById('tabGantt');
+        const tabSearchPanel = document.getElementById('tabSearchPanel');
+        const tabGanttPanel = document.getElementById('tabGanttPanel');
+        tabSearch.onclick = function(){
+            tabSearch.classList.add('active'); tabGantt.classList.remove('active');
+            tabSearchPanel.style.display='block'; tabGanttPanel.style.display='none';
+        }
+        tabGantt.onclick = function(){
+            tabGantt.classList.add('active'); tabSearch.classList.remove('active');
+            tabGanttPanel.style.display='block'; tabSearchPanel.style.display='none';
+        }
+        // CONFIG & GLOBALS
         const CONFIG = {
             githubUser: 'print-imall',
             githubRepo: 'company-chat',
@@ -408,6 +496,7 @@
                     const sampleFields = Object.keys(productsData[0]).join(', ');
                     addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
                 }
+                updateGanttMallsOptions();
             } catch (error) {
                 updateStatus('error', 'שגיאה בטעינה');
                 let errorHelp = '';
@@ -418,7 +507,7 @@
             }
         }
 
-        // שיפור החיפוש - כל המילים בפלטפורמה (לא משנה הסדר)
+        // חיפוש: כל המילים בפלטפורמה (לא משנה הסדר), אח"כ הכי הרבה התאמות
         function searchProducts(query) {
             if (!query.trim()) return [];
             const originalQuery = query.trim();
@@ -442,7 +531,7 @@
                 });
                 if(count>bestCount) {best=product;bestCount=count;}
             });
-            if(best) return [{product: best}];
+            if(best && bestCount>0) return [{product: best}];
             return [];
         }
         function displayProductResult(item) {
@@ -452,7 +541,6 @@
             let html = '<div class="product-result">';
             html += '<div class="product-compact">';
             html += '<div class="product-image-compact">';
-            // מציג placeholder פשוט, לא אנימציה
             html += `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}" onerror="this.onerror=null;this.src='';this.alt='אין תמונה';" style="background:#fff" />`;
             html += '</div>';
             html += '<div class="product-info-compact">';
@@ -514,7 +602,68 @@
         }
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
-        window.addEventListener('load', function() { setTimeout(function() { loadExcelData(); }, 700);});
+
+        // ----------- GANTT MODULE --------------
+        let ganttMallsList = [];
+        function updateGanttMallsOptions() {
+            if(!window.productsData) return;
+            const mallSelect = document.getElementById('ganttMalls');
+            const malls = Array.from(new Set(productsData.map(p=>p['מתחם']).filter(Boolean))).sort();
+            ganttMallsList = malls;
+            mallSelect.innerHTML = malls.map(m=>`<option value="${m}">${m}</option>`).join('');
+        }
+        function filterGanttProducts(selectedMalls, type) {
+            return productsData.filter(p=>{
+                if(selectedMalls.length && !selectedMalls.includes(p['מתחם'])) return false;
+                if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return false;
+                if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return false;
+                return true;
+            });
+        }
+        function renderGanttTable(products) {
+            if(!products.length) return "<div style='color:#b00;font-weight:700'>לא נמצאו אלמנטים תואמים</div>";
+            let total = 0;
+            let rows = products.map(p=>{
+                let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
+                if(!isNaN(price)) total+=price;
+                return `<tr>
+                  <td>${p['פלטפורמה']||'-'}</td>
+                  <td>${p['מתחם']||'-'}</td>
+                  <td>${p['קמפיין']||'-'}</td>
+                  <td>${p['מחיר מכירה']||'-'}</td>
+                </tr>`;
+            }).join('');
+            let tbl = `<table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+                <thead><tr style="background:#f6f6fa">
+                  <th>פלטפורמה</th><th>מתחם</th><th>קמפיין</th><th>מחיר מכירה</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+              <div style="font-weight:700;font-size:20px;color:#007bff">סך הכל: ${total.toLocaleString()} ₪</div>`;
+            let max = Math.max(...products.map(p=>Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''))||0));
+            let bars = products.map(p=>{
+                let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''))||0;
+                let w = max? Math.max(8,Math.round((price/max)*100)) : 8;
+                return `<div class="gantt-bar">
+                  <div class="gantt-bar-inner" style="width:${w}%;background:${w>8?'linear-gradient(92deg,#28a745,#20c997)':'#bbb'}">${price?price.toLocaleString():'-'}</div>
+                  <span class="gantt-bar-label">${p['קמפיין']||'-'} | ${p['מתחם']||'-'}</span>
+                </div>`;
+            }).join('');
+            return tbl + `<div style="margin-top:20px"><b>הדמיית גאנט:</b><br>${bars}</div>`;
+        }
+        document.getElementById('ganttCalcBtn').onclick = function(){
+            const mallSelect = document.getElementById('ganttMalls');
+            const selectedMalls = Array.from(mallSelect.selectedOptions).map(o=>o.value);
+            const type = document.getElementById('ganttType').value;
+            const products = filterGanttProducts(selectedMalls, type);
+            document.getElementById('ganttResults').innerHTML = renderGanttTable(products);
+        };
+        // עדכן רשימת קניונים אחרי טעינת נתונים
+        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallsOptions, 300);}
+        window.addEventListener('load',function(){
+            setTimeout(function() { loadExcelData(); }, 700);
+            afterLoadProductsForGantt();
+        });
     </script>
 </body>
 </html>
