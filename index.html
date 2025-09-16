@@ -300,6 +300,18 @@
             
             <br><br>
             
+            <label>👤 שם משתמש GitHub:</label>
+            <input type="text" id="githubUsername" class="config-input" 
+                   placeholder="username">
+            
+            <br><br>
+            
+            <label>📦 שם רפוזיטורי:</label>
+            <input type="text" id="githubRepo" class="config-input" 
+                   placeholder="repository-name">
+            
+            <br><br>
+            
             <label>📷 כתובת בסיס לתמונות Dropbox:</label>
             <input type="text" id="dropboxUrl" class="config-input" 
                    placeholder="https://dl.dropboxusercontent.com/s/your-folder-link/">
@@ -376,28 +388,60 @@
             // If running on GitHub Pages
             if (currentUrl.includes('github.io')) {
                 const parts = currentUrl.split('/');
-                const username = parts[3].replace('.github.io', '');
-                const repoName = parts[4] || username;
+                const username = parts[2].replace('.github.io', '');
+                const repoName = parts[3] || username;
                 return { username, repoName };
             }
             
-            // If running locally or other domain, use default
+            // If running locally or other domain, use manual input
             return { 
-                username: 'YOUR_USERNAME', 
-                repoName: 'YOUR_REPO_NAME' 
+                username: '', 
+                repoName: '' 
             };
         }
 
         // Load Excel data from GitHub repository
         async function loadExcelData() {
             const fileName = excelFileNameInput.value.trim() || 'products.xlsx';
-            const { username, repoName } = getRepoInfo();
+            const manualUsername = document.getElementById('githubUsername').value.trim();
+            const manualRepo = document.getElementById('githubRepo').value.trim();
+            
+            let username, repoName;
+            
+            // Try to get from manual input first, then from URL
+            if (manualUsername && manualRepo) {
+                username = manualUsername;
+                repoName = manualRepo;
+            } else {
+                const autoDetected = getRepoInfo();
+                username = autoDetected.username;
+                repoName = autoDetected.repoName;
+            }
+            
+            // If still no username/repo, show error
+            if (!username || !repoName) {
+                updateStatus('error', 'חסר מידע GitHub');
+                addMessage(`
+                    <div class="error-message">
+                        <strong>❌ חסר מידע:</strong><br>
+                        אנא מלא את שם המשתמש ושם הרפוזיטורי בהגדרות מעלה.<br><br>
+                        
+                        <strong>איך למצוא:</strong><br>
+                        אם הקישור שלך הוא: https://username.github.io/repo-name<br>
+                        - שם משתמש: username<br>
+                        - שם רפוזיטורי: repo-name
+                    </div>
+                `);
+                return;
+            }
             
             updateStatus('loading', 'טוען נתונים מ-GitHub...');
             
             try {
                 // GitHub raw content URL
                 const githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
+                
+                console.log('Trying to load from:', githubUrl);
                 
                 const response = await fetch(githubUrl);
                 
@@ -419,7 +463,8 @@
                 addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
                           נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
                           קובץ: ${fileName}<br>
-                          רפוזיטורי: ${username}/${repoName}`);
+                          רפוזיטורי: ${username}/${repoName}<br>
+                          URL: ${githubUrl}`);
                 
                 // Enable search
                 searchInput.disabled = false;
@@ -431,20 +476,22 @@
                 console.error('Error loading Excel:', error);
                 updateStatus('error', 'שגיאה בטעינת הנתונים');
                 
-                const { username, repoName } = getRepoInfo();
                 addMessage(`
                     <div class="error-message">
                         <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
                         ${error.message}<br><br>
                         
                         <strong>בדוק את הדברים הבאים:</strong><br>
-                        1. הקובץ "${fileName}" קיים בתיקייה הראשית של הרפוזיטורי<br>
-                        2. הרפוזיטורי הוא ציבורי או שיש לך הרשאות גישה<br>
-                        3. שם הקובץ נכון (כולל סיומת .xlsx או .xls)<br>
-                        4. הקובץ נמצא ב-branch ראשי (main/master)<br><br>
+                        1. שם המשתמש ושם הרפוזיטורי נכונים<br>
+                        2. הקובץ "${fileName}" קיים בתיקייה הראשית של הרפוזיטורי<br>
+                        3. הרפוזיטורי הוא ציבורי (Public)<br>
+                        4. שם הקובץ נכון (כולל סיומת .xlsx או .xls)<br>
+                        5. הקובץ נמצא ב-branch ראשי (main)<br><br>
                         
                         <strong>URL שנבדק:</strong><br>
-                        https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}
+                        <code>https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}</code><br><br>
+                        
+                        <strong>נסה לבדוק את ה-URL הזה ישירות בדפדפן</strong>
                     </div>
                 `);
             }
