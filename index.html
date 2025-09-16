@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מערכת צ'אט החברה</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏢</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🢠</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -305,6 +305,107 @@
             font-size:15px;
             color:#222;
         }
+        .gantt-controls {
+            background: rgba(255,255,255,0.95);
+            padding: 20px 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .gantt-form-group {
+            margin-bottom: 15px;
+        }
+        .gantt-form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .gantt-form-group select, .gantt-form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .gantt-form-group select:focus, .gantt-form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .multi-select-container {
+            position: relative;
+        }
+        .multi-select-display {
+            min-height: 45px;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .multi-select-display:hover {
+            border-color: #007bff;
+        }
+        .selected-items {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .selected-item {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .selected-item .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .dropdown-arrow {
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+        .dropdown-arrow.open {
+            transform: rotate(180deg);
+        }
+        .multi-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .multi-select-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .multi-select-option:hover {
+            background: #f8f9fa;
+        }
+        .multi-select-option input[type="checkbox"] {
+            margin: 0;
+            width: auto;
+        }
         @media (max-width: 900px) {
             .main-container { flex-direction: column; }
             .sidebar { width: 100%; min-width: unset; max-width: unset; padding:10px 0 0 0;}
@@ -338,7 +439,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🏢 מערכת צ'אט החברה</h1>
+        <h1>🢠 מערכת צ'אט החברה</h1>
         <div class="status-indicator loading" id="statusIndicator">
             <span>⏳</span>
             <span>טוען נתונים...</span>
@@ -373,7 +474,7 @@
                         <strong>איך החיפוש עובד:</strong><br>
                         • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
                         • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
-                        • מציגה את כל התוצאות המתאימות<br><br>
+                        • מציגה את כל התוצאות המתאימות (עד 30)<br><br>
                         <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
                         <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
                     </div>
@@ -393,26 +494,38 @@
                 </div>
             </div>
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
-                <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
-                    <div style="margin-bottom:10px;">
-                        <label><b>בחר קניון (או השאר ריק לסיכום לכל הקניונים):</b></label><br>
-                        <select id="ganttMall" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
-                            <option value="">כל הקניונים</option>
-                        </select>
+                <div class="gantt-controls">
+                    <h3 style="margin-top:0; color:#333; text-align:center;">📊 מחשבון תקציב גאנט</h3>
+                    
+                    <div class="gantt-form-group">
+                        <label for="ganttMalls">🏪 בחר מתחמים:</label>
+                        <div class="multi-select-container">
+                            <div class="multi-select-display" id="mallsDisplay">
+                                <div class="selected-items" id="selectedMalls">
+                                    <span style="color:#999;">בחר מתחמים...</span>
+                                </div>
+                                <div class="dropdown-arrow">▼</div>
+                            </div>
+                            <div class="multi-select-dropdown" id="mallsDropdown"></div>
+                        </div>
                     </div>
-                    <div style="margin-bottom:10px;">
-                        <label><b>סוג קמפיין:</b></label>
-                        <select id="ganttType" style="font-size:16px;border-radius:7px;border:1px solid #bbb;padding:5px;">
+                    
+                    <div class="gantt-form-group">
+                        <label for="ganttType">🎯 סוג קמפיין:</label>
+                        <select id="ganttType">
                             <option value="all">משולב (הכל)</option>
                             <option value="פרינט">פרינט</option>
                             <option value="דיגיטלי">דיגיטלי</option>
                         </select>
                     </div>
-                    <div style="margin-bottom:10px;">
-                        <label><b>הזן תקציב (₪):</b></label><br>
-                        <input type="number" id="ganttBudget" min="0" step="1" placeholder="הכנס תקציב" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
+                    
+                    <div class="gantt-form-group">
+                        <label for="ganttBudget">💰 תקציב מקסימלי (₪):</label>
+                        <input type="number" id="ganttBudget" min="0" step="1" placeholder="הכנס תקציב מקסימלי (אופציונלי)">
                     </div>
-                    <button id="ganttCalcBtn" style="padding:14px 38px;font-size:18px;font-weight:700;border-radius:16px;background:linear-gradient(95deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;margin-bottom:20px;">חשב תקציב</button>
+                    
+                    <button id="ganttCalcBtn" style="width:100%; padding:15px; font-size:18px; font-weight:700; border-radius:12px; background:linear-gradient(135deg,#007bff,#0056b3); color:white; border:none; cursor:pointer; margin-bottom:20px;">📊 חשב תקציב</button>
+                    
                     <div id="ganttResults"></div>
                 </div>
             </div>
@@ -442,6 +555,10 @@
         const searchBtn = document.getElementById('searchBtn');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
+
+        // Multi-select functionality
+        let selectedMalls = new Set();
+        let allMalls = [];
 
         function clearHistory() {
             const systemMessages = messagesArea.querySelectorAll('.message.system');
@@ -501,34 +618,62 @@
             }
         }
 
+        // שיפור אלגוריתם החיפוש - מתמקד בפלטפורמה ראשון
         function searchProducts(query) {
             if (!query.trim()) return [];
-            const originalQuery = query.trim();
-            const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(t=>t.length>0);
-            const platformResults = productsData.filter(product=>{
-                const plat = String(product['פלטפורמה']||'').toLowerCase();
-                return searchTerms.every(term=>plat.includes(term));
+            const searchQuery = query.trim().toLowerCase();
+            
+            // חיפוש ראשון - רק בעמודה "פלטפורמה"
+            const platformResults = productsData.filter(product => {
+                const platform = String(product['פלטפורמה'] || '').toLowerCase();
+                return platform.includes(searchQuery);
             });
-            if(platformResults.length > 0) {
-                return platformResults.slice(0, 30).map(product => ({product}));
+            
+            // אם נמצאו תוצאות בפלטפורמה, מחזירים אותן (עד 30)
+            if (platformResults.length > 0) {
+                return platformResults.slice(0, 30).map(product => ({
+                    product,
+                    matchType: 'platform'
+                }));
             }
+            
+            // אם לא נמצאו תוצאות בפלטפורמה, מחפשים בכל השדות
+            const searchTerms = searchQuery.split(/\s+/).filter(t => t.length > 0);
+            
             let scored = productsData.map(product => {
-                let count = 0;
-                Object.values(product).forEach(val=>{
-                    if(!val) return;
-                    const s = String(val).toLowerCase();
-                    count += searchTerms.filter(t=>s.includes(t)).length;
+                let score = 0;
+                Object.values(product).forEach(val => {
+                    if (!val) return;
+                    const fieldValue = String(val).toLowerCase();
+                    searchTerms.forEach(term => {
+                        if (fieldValue.includes(term)) {
+                            score += 1;
+                        }
+                    });
                 });
-                return {product, count};
-            }).filter(obj => obj.count>0)
-              .sort((a,b)=>b.count-a.count)
+                return { product, score };
+            }).filter(obj => obj.score > 0)
+              .sort((a, b) => b.score - a.score)
               .slice(0, 30);
-            return scored.map(obj=>({product: obj.product}));
+            
+            return scored.map(obj => ({
+                product: obj.product,
+                matchType: 'general'
+            }));
         }
 
         function displayAllProductResults(items) {
+            if (items.length > 0) {
+                const matchType = items[0].matchType;
+                if (matchType === 'platform') {
+                    addMessage(`<strong>🎯 נמצאו ${items.length} תוצאות בפלטפורמה:</strong><br>התוצאות מוצגות לפי התאמה מדויקת בשדה "פלטפורמה".`);
+                } else {
+                    addMessage(`<strong>🔍 נמצאו ${items.length} תוצאות בחיפוש כללי:</strong><br>לא נמצאו התאמות בפלטפורמה, מוצגות תוצאות מכל השדות.`);
+                }
+            }
             items.forEach(displayProductResult);
         }
+
         function displayProductResult(item) {
             const product = item.product;
             const productCode = product['מקט'] || 'לא זמין';
@@ -552,17 +697,18 @@
             html += '<tr><th>מספר מבקרים</th><td>' + (product['מבקרים'] || '-') + '</td></tr>';
             html += '</tbody></table></div>';
             html += '<div class="action-buttons-product">';
-            html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בוואטסאפ</button>';
+            html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בווטסאפ</button>';
             html += '</div></div></div></div>';
             addMessage(html);
         }
+
         function shareProduct(productCode) {
             const allMsgs = Array.from(messagesArea.querySelectorAll('.product-result'));
             let prodDiv = null;
-            allMsgs.forEach(div=>{
-                if(div.innerHTML.includes('מקט: '+productCode)) prodDiv=div;
+            allMsgs.forEach(div => {
+                if (div.innerHTML.includes('מקט: ' + productCode)) prodDiv = div;
             });
-            if(!prodDiv) return;
+            if (!prodDiv) return;
             const table = prodDiv.querySelector('.product-table');
             if (!table) return;
             const rows = table.querySelectorAll('tr');
@@ -581,8 +727,9 @@
             productText += '\n\n—\n📡 נשלח ממערכת צ\'אט החברה';
             const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
             window.open(whatsappUrl, '_blank');
-            addMessage('<strong>📱 שיתוף בוואטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לוואטסאפ!<br><small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
+            addMessage('<strong>📱 שיתוף בווטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לווטסאפ!<br><small>אם הווטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
         }
+
         function performSearch() {
             const query = searchInput.value.trim();
             if (!query) return;
@@ -595,91 +742,333 @@
             }
             searchInput.value = '';
         }
+
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
 
+        // עדכון רשימת המתחמים עבור הגאנט
         function updateGanttMallOptions() {
-            if(!window.productsData || !Array.isArray(productsData) || productsData.length === 0) return;
-            const mallSelect = document.getElementById('ganttMall');
-            if(!mallSelect) return;
-            const allMalls = productsData.map(p=>p['מתחם']);
-            const malls = Array.from(new Set(allMalls.filter(Boolean))).sort();
-            mallSelect.innerHTML = '<option value="">כל הקניונים</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
+            if (!window.productsData || !Array.isArray(productsData) || productsData.length === 0) return;
+            
+            const allMallsSet = new Set();
+            productsData.forEach(p => {
+                const mall = p['מתחם'];
+                if (mall && mall.trim()) {
+                    allMallsSet.add(mall.trim());
+                }
+            });
+            
+            allMalls = Array.from(allMallsSet).sort();
+            updateMallsDropdown();
         }
 
-        function renderGanttTableSummaryByMall(type, budget, selectedMall) {
-            let mallSums = {};
-            let allMalls = [];
-            productsData.forEach(p=>{
-                const mall = p['מתחם'];
-                if(!mall) return;
-                if(selectedMall && mall !== selectedMall) return;
-                if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return;
-                if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return;
-                let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
-                if(isNaN(price)) price=0;
-                if(!mallSums[mall]) {
-                    mallSums[mall]=0;
-                    allMalls.push(mall);
+        // יצירת רשימה נפתחת רב-בחירה למתחמים
+        function updateMallsDropdown() {
+            const dropdown = document.getElementById('mallsDropdown');
+            if (!dropdown) return;
+            
+            dropdown.innerHTML = '';
+            
+            // אפשרות "בחר הכל"
+            const selectAllOption = document.createElement('div');
+            selectAllOption.className = 'multi-select-option';
+            selectAllOption.innerHTML = `
+                <input type="checkbox" id="selectAll" ${selectedMalls.size === allMalls.length ? 'checked' : ''}>
+                <label for="selectAll"><strong>בחר הכל</strong></label>
+            `;
+            selectAllOption.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const checkbox = this.querySelector('input');
+                if (checkbox.checked) {
+                    selectedMalls.clear();
+                } else {
+                    selectedMalls.clear();
+                    allMalls.forEach(mall => selectedMalls.add(mall));
                 }
-                mallSums[mall] += price;
+                updateMallsDisplay();
+                updateMallsDropdown();
             });
-            if(budget && !isNaN(budget) && budget>0) {
-                let sumSoFar = 0;
-                let limited = [];
-                for(let mall of allMalls) {
-                    if(sumSoFar+mallSums[mall]>budget) break;
-                    sumSoFar+=mallSums[mall];
-                    limited.push(mall);
-                }
-                allMalls = limited;
-            }
-            if(allMalls.length==0) return "<div style='color:#b00;font-weight:700'>לא נמצאו קניונים תואמים</div>";
-            let tbl = `<table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
-                <thead><tr style="background:#f6f6fa">
-                  <th>קניון</th><th>סך הכל תקציב</th>
-                </tr></thead><tbody>`;
-            let total = 0;
-            for(let mall of allMalls) {
-                tbl += `<tr><td>${mall}</td><td>${mallSums[mall].toLocaleString()} ₪</td></tr>`;
-                total += mallSums[mall];
-            }
-            tbl += `</tbody></table>
-                <div style="font-weight:700;font-size:20px;color:#007bff">סכום כללי: ${total.toLocaleString()} ₪</div>`;
-            let max = Math.max(...allMalls.map(m=>mallSums[m]));
-            let bars = allMalls.map(mall=>{
-                let price = mallSums[mall];
-                let w = max? Math.max(8,Math.round((price/max)*100)) : 8;
-                return `<div class="gantt-bar">
-                  <div class="gantt-bar-inner" style="width:${w}%;background:${w>8?'linear-gradient(92deg,#28a745,#20c997)':'#bbb'}">${price?price.toLocaleString():'-'}</div>
-                  <span class="gantt-bar-label">${mall}</span>
-                </div>`;
-            }).join('');
-            return tbl + `<div style="margin-top:20px"><b>הדמיית גאנט:</b><br>${bars}</div>`;
+            dropdown.appendChild(selectAllOption);
+            
+            // הוספת קו מפריד
+            const separator = document.createElement('div');
+            separator.style.borderTop = '1px solid #e9ecef';
+            separator.style.margin = '5px 0';
+            dropdown.appendChild(separator);
+            
+            // אפשרויות המתחמים
+            allMalls.forEach(mall => {
+                const option = document.createElement('div');
+                option.className = 'multi-select-option';
+                option.innerHTML = `
+                    <input type="checkbox" id="mall-${mall}" ${selectedMalls.has(mall) ? 'checked' : ''}>
+                    <label for="mall-${mall}">${mall}</label>
+                `;
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const checkbox = this.querySelector('input');
+                    if (checkbox.checked) {
+                        selectedMalls.delete(mall);
+                    } else {
+                        selectedMalls.add(mall);
+                    }
+                    updateMallsDisplay();
+                    updateMallsDropdown();
+                });
+                dropdown.appendChild(option);
+            });
         }
-        document.getElementById('ganttCalcBtn').onclick = function(){
-            const mallSelect = document.getElementById('ganttMall');
-            const selectedMall = mallSelect.value;
+
+        function updateMallsDisplay() {
+            const selectedMallsDiv = document.getElementById('selectedMalls');
+            if (!selectedMallsDiv) return;
+            
+            if (selectedMalls.size === 0) {
+                selectedMallsDiv.innerHTML = '<span style="color:#999;">בחר מתחמים...</span>';
+            } else {
+                selectedMallsDiv.innerHTML = '';
+                Array.from(selectedMalls).forEach(mall => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    item.innerHTML = `
+                        ${mall}
+                        <span class="remove" onclick="removeMall('${mall}')">×</span>
+                    `;
+                    selectedMallsDiv.appendChild(item);
+                });
+            }
+        }
+
+        function removeMall(mall) {
+            selectedMalls.delete(mall);
+            updateMallsDisplay();
+            updateMallsDropdown();
+        }
+
+        // טיפול בלחיצה על התצוגה של הרשימה הנפתחת
+        document.getElementById('mallsDisplay').addEventListener('click', function() {
+            const dropdown = document.getElementById('mallsDropdown');
+            const arrow = document.querySelector('.dropdown-arrow');
+            const isOpen = dropdown.style.display === 'block';
+            
+            if (isOpen) {
+                dropdown.style.display = 'none';
+                arrow.classList.remove('open');
+            } else {
+                dropdown.style.display = 'block';
+                arrow.classList.add('open');
+            }
+        });
+
+        // סגירת הרשימה הנפתחת כשלוחצים מחוץ לה
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.multi-select-container');
+            if (!container.contains(e.target)) {
+                document.getElementById('mallsDropdown').style.display = 'none';
+                document.querySelector('.dropdown-arrow').classList.remove('open');
+            }
+        });
+
+        // חישוב תקציב גאנט משופר
+        function calculateGanttBudget() {
             const type = document.getElementById('ganttType').value;
             const budget = Number(document.getElementById('ganttBudget').value);
-            document.getElementById('ganttResults').innerHTML = renderGanttTableSummaryByMall(type, budget, selectedMall);
-        };
+            
+            if (selectedMalls.size === 0) {
+                document.getElementById('ganttResults').innerHTML = 
+                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ אנא בחר לפחות מתחם אחד</div>';
+                return;
+            }
+            
+            let mallSums = {};
+            let mallCounts = {};
+            
+            // חישוב סכומים לכל מתחם נבחר
+            productsData.forEach(p => {
+                const mall = p['מתחם'];
+                if (!mall || !selectedMalls.has(mall.trim())) return;
+                
+                // סינון לפי סוג קמפיין
+                if (type === 'פרינט' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('פרינט'))) return;
+                if (type === 'דיגיטלי' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('דיגיטלי'))) return;
+                
+                let price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                if (isNaN(price)) price = 0;
+                
+                const mallKey = mall.trim();
+                if (!mallSums[mallKey]) {
+                    mallSums[mallKey] = 0;
+                    mallCounts[mallKey] = 0;
+                }
+                mallSums[mallKey] += price;
+                mallCounts[mallKey]++;
+            });
+            
+            const selectedMallsList = Array.from(selectedMalls);
+            
+            // סינון לפי תקציב אם הוגדר
+            let finalMalls = selectedMallsList;
+            if (budget && !isNaN(budget) && budget > 0) {
+                let currentSum = 0;
+                finalMalls = [];
+                
+                // מיון לפי עלות (מהנמוך לגבוה)
+                const sortedMalls = selectedMallsList.sort((a, b) => (mallSums[a] || 0) - (mallSums[b] || 0));
+                
+                for (let mall of sortedMalls) {
+                    const mallCost = mallSums[mall] || 0;
+                    if (currentSum + mallCost <= budget) {
+                        currentSum += mallCost;
+                        finalMalls.push(mall);
+                    }
+                }
+            }
+            
+            if (finalMalls.length === 0) {
+                document.getElementById('ganttResults').innerHTML = 
+                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ לא נמצאו מתחמים תואמים לתקציב או לסוג הקמפיין</div>';
+                return;
+            }
+            
+            // יצירת טבלת תוצאות
+            let html = `
+                <div style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <h4 style="text-align:center; color:#007bff; margin-top:0;">📊 תוצאות חישוב תקציב</h4>
+                    
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span><strong>סוג קמפיין:</strong></span>
+                            <span>${type === 'all' ? 'משולב (הכל)' : type}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span><strong>מתחמים נבחרים:</strong></span>
+                            <span>${selectedMalls.size}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span><strong>מתחמים בתקציב:</strong></span>
+                            <span>${finalMalls.length}</span>
+                        </div>
+                    </div>
+                    
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                        <thead>
+                            <tr style="background:#007bff; color:white;">
+                                <th style="padding:12px; text-align:right; border-radius:8px 0 0 0;">מתחם</th>
+                                <th style="padding:12px; text-align:center;">מוצרים</th>
+                                <th style="padding:12px; text-align:center; border-radius:0 8px 0 0;">עלות (₪)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            let totalCost = 0;
+            let totalProducts = 0;
+            const maxCost = Math.max(...finalMalls.map(mall => mallSums[mall] || 0));
+            
+            finalMalls.forEach((mall, index) => {
+                const cost = mallSums[mall] || 0;
+                const count = mallCounts[mall] || 0;
+                totalCost += cost;
+                totalProducts += count;
+                
+                const bgColor = index % 2 === 0 ? '#f8f9fa' : 'white';
+                html += `
+                    <tr style="background:${bgColor};">
+                        <td style="padding:10px; font-weight:500;">${mall}</td>
+                        <td style="padding:10px; text-align:center;">${count}</td>
+                        <td style="padding:10px; text-align:center; font-weight:600; color:#007bff;">${cost.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="background:#28a745; color:white; font-weight:bold;">
+                                <td style="padding:12px;">סה"כ</td>
+                                <td style="text-align:center; padding:12px;">${totalProducts}</td>
+                                <td style="text-align:center; padding:12px;">${totalCost.toLocaleString()}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+            `;
+            
+            // הוספת גרף גאנט חזותי
+            html += '<div style="margin-top:20px;"><h5 style="color:#333; margin-bottom:15px;">📈 תצוגת גאנט חזותית:</h5>';
+            
+            finalMalls.forEach(mall => {
+                const cost = mallSums[mall] || 0;
+                const percentage = maxCost > 0 ? Math.max(8, Math.round((cost / maxCost) * 100)) : 8;
+                
+                html += `
+                    <div class="gantt-bar">
+                        <div class="gantt-bar-inner" style="width:${percentage}%; font-size:13px;">
+                            ${cost > 0 ? cost.toLocaleString() + ' ₪' : '-'}
+                        </div>
+                        <span class="gantt-bar-label">${mall}</span>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // תקציב נותר
+            if (budget && !isNaN(budget) && budget > 0) {
+                const remaining = budget - totalCost;
+                const usedPercentage = Math.round((totalCost / budget) * 100);
+                
+                html += `
+                    <div style="margin-top:20px; padding:15px; background:${remaining >= 0 ? '#d4edda' : '#f8d7da'}; border-radius:8px;">
+                        <h5 style="margin:0 0 10px 0; color:${remaining >= 0 ? '#155724' : '#721c24'};">💰 סטטוס תקציב</h5>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>תקציב מקסימלי:</span>
+                            <span><strong>${budget.toLocaleString()} ₪</strong></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>בשימוש:</span>
+                            <span><strong>${totalCost.toLocaleString()} ₪ (${usedPercentage}%)</strong></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>${remaining >= 0 ? 'נותר:' : 'חריגה:'}</span>
+                            <span style="font-weight:bold; color:${remaining >= 0 ? '#155724' : '#721c24'};">
+                                ${Math.abs(remaining).toLocaleString()} ₪
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('ganttResults').innerHTML = html;
+        }
 
+        document.getElementById('ganttCalcBtn').addEventListener('click', calculateGanttBudget);
+
+        // טיפול בטאבים
         const tabSearch = document.getElementById('tabSearch');
         const tabGantt = document.getElementById('tabGantt');
         const tabSearchPanel = document.getElementById('tabSearchPanel');
         const tabGanttPanel = document.getElementById('tabGanttPanel');
-        tabSearch.onclick = function(){
-            tabSearch.classList.add('active'); tabGantt.classList.remove('active');
-            tabSearchPanel.style.display='block'; tabGanttPanel.style.display='none';
-        }
-        tabGantt.onclick = function(){
-            tabGantt.classList.add('active'); tabSearch.classList.remove('active');
-            tabGanttPanel.style.display='block'; tabSearchPanel.style.display='none';
+
+        tabSearch.onclick = function() {
+            tabSearch.classList.add('active'); 
+            tabGantt.classList.remove('active');
+            tabSearchPanel.style.display = 'block'; 
+            tabGanttPanel.style.display = 'none';
         }
 
-        window.addEventListener('load',function(){
-            setTimeout(function() { loadExcelData(); }, 700);
+        tabGantt.onclick = function() {
+            tabGantt.classList.add('active'); 
+            tabSearch.classList.remove('active');
+            tabGanttPanel.style.display = 'block'; 
+            tabSearchPanel.style.display = 'none';
+        }
+
+        // טעינת הנתונים בעת טעינת הדף
+        window.addEventListener('load', function() {
+            setTimeout(function() { 
+                loadExcelData(); 
+            }, 700);
         });
     </script>
 </body>
