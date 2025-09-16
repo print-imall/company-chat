@@ -71,7 +71,7 @@
         .main-container {
             flex: 1;
             display: flex;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             padding: 20px;
@@ -79,7 +79,7 @@
         }
 
         .sidebar {
-            width: 350px;
+            width: 300px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -91,105 +91,11 @@
             flex-direction: column;
         }
 
-        .config-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .config-card h3 {
-            color: white;
-            font-size: 18px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .config-group {
-            margin-bottom: 20px;
-        }
-
-        .config-label {
-            display: block;
-            color: white;
-            font-size: 14px;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .config-input, .config-select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .config-input:focus, .config-select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
-            outline: none;
-        }
-
-        .config-hint {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 5px;
-            line-height: 1.4;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
         .stats-card {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             border-radius: 20px;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             color: white;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -197,14 +103,44 @@
         }
 
         .stats-number {
-            font-size: 28px;
+            font-size: 36px;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stats-label {
-            font-size: 14px;
+            font-size: 16px;
             opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .quick-info {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quick-info h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-info p {
+            margin-bottom: 10px;
+            opacity: 0.9;
+            line-height: 1.5;
         }
 
         .messages-area {
@@ -215,7 +151,7 @@
             padding: 25px;
             overflow-y: auto;
             min-height: 400px;
-            max-height: 60vh;
+            max-height: 65vh;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
@@ -345,7 +281,7 @@
 
         .product-image img {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 350px;
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
@@ -456,7 +392,7 @@
         }
 
         /* Responsive Design */
-        @media (max-width: 1200px) {
+        @media (max-width: 1000px) {
             .main-container {
                 flex-direction: column;
             }
@@ -465,14 +401,20 @@
                 width: 100%;
                 flex-direction: row;
                 overflow-x: auto;
+                gap: 15px;
             }
             
             .sidebar > * {
-                min-width: 300px;
+                min-width: 250px;
+                flex-shrink: 0;
             }
         }
 
         @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+            
             .sidebar {
                 flex-direction: column;
             }
@@ -492,10 +434,15 @@
             
             .input-area {
                 flex-direction: column;
+                padding: 15px;
             }
             
-            .action-buttons {
-                justify-content: center;
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
             }
         }
 
@@ -524,83 +471,29 @@
         <h1>🏢 מערכת צ'אט החברה</h1>
         <div class="status-indicator loading" id="statusIndicator">
             <span>⏳</span>
-            <span>טוען נתונים מ-GitHub...</span>
+            <span>טוען נתונים...</span>
         </div>
     </div>
 
     <div class="main-container">
-        <!-- Sidebar with Configuration -->
+        <!-- Sidebar with Info -->
         <div class="sidebar">
-            <!-- GitHub Configuration -->
-            <div class="config-card">
-                <h3>📁 הגדרות קבצים</h3>
-                
-                <div class="config-group">
-                    <label class="config-label">קישור GitHub לקובץ Excel:</label>
-                    <input type="text" id="githubFileUrl" class="config-input" 
-                           placeholder="https://github.com/username/repo/blob/main/products.xlsx">
-                    <div class="config-hint">העתק את הקישור המלא לקובץ ה-Excel מ-GitHub</div>
-                </div>
-
-                <div class="config-group">
-                    <label class="config-label">שם משתמש GitHub:</label>
-                    <input type="text" id="githubUsername" class="config-input" 
-                           placeholder="print-imall" value="print-imall">
-                </div>
-
-                <div class="config-group">
-                    <label class="config-label">שם רפוזיטורי:</label>
-                    <input type="text" id="githubRepo" class="config-input" 
-                           placeholder="company-chat" value="company-chat">
-                </div>
-
-                <div class="action-buttons">
-                    <button onclick="loadExcelData()" class="btn btn-primary">
-                        <span>🔄</span>
-                        <span>טען מחדש</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Images Configuration -->
-            <div class="config-card">
-                <h3>📷 הגדרות תמונות</h3>
-                
-                <div class="config-group">
-                    <label class="config-label">כתובת בסיס לתמונות:</label>
-                    <input type="text" id="dropboxUrl" class="config-input" 
-                           placeholder="https://raw.githubusercontent.com/username/repo/main/">
-                    <div class="config-hint">GitHub, Dropbox, או כתובת אחרת</div>
-                </div>
-
-                <div class="config-group">
-                    <label class="config-label">פורמט שם תמונה:</label>
-                    <select id="imageNameFormat" class="config-select">
-                        <option value="direct">[מקט].jpg - לדוגמה: 12345.jpg</option>
-                        <option value="prefix">product-[מקט].jpg</option>
-                        <option value="custom">פורמט מותאם אישית</option>
-                    </select>
-                </div>
-
-                <div class="config-group" id="customFormatDiv" style="display: none;">
-                    <label class="config-label">פורמט מותאם:</label>
-                    <input type="text" id="customImageFormat" class="config-input" 
-                           placeholder="img_{מקט}.png">
-                    <div class="config-hint">השתמש ב-{מקט} כמשתנה</div>
-                </div>
-
-                <div class="action-buttons">
-                    <button onclick="testImageUrl()" class="btn btn-secondary">
-                        <span>🧪</span>
-                        <span>בדוק תמונה</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- Statistics -->
             <div class="stats-card" id="statsCard" style="display: none;">
                 <div class="stats-number" id="productCount">0</div>
                 <div class="stats-label">מוצרים במאגר</div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="quick-info">
+                <h3>💡 מידע מהיר</h3>
+                <p><strong>🎯 חיפוש חכם:</strong> החיפוש מתחיל בפלטפורמה ואז עובר לשדות אחרים</p>
+                <p><strong>🔍 דוגמאות חיפוש:</strong></p>
+                <p>• שם פלטפורמה</p>
+                <p>• מספר מקט</p>
+                <p>• שם מתחם</p>
+                <p>• שם קמפיין</p>
+                <p><strong>📷 תמונות:</strong> מוצגות אוטומטית לפי מספר המקט</p>
             </div>
         </div>
 
@@ -609,23 +502,23 @@
             <!-- Messages Area -->
             <div class="messages-area" id="messagesArea">
                 <div class="message system">
-                    <strong>🤖 ברוכים הבאים למערכת צ'אט החברה!</strong><br><br>
-                    <strong>מה המערכת עושה:</strong><br>
-                    • טוענת אוטומטית את נתוני המוצרים מ-GitHub<br>
-                    • מאפשרת חיפוש מתקדם עם עדיפות לפלטפורמה<br>
-                    • מציגה תמונות של המוצרים<br><br>
+                    <strong>🤖 ברוכים הבאים למערכת חיפוש מוצרים!</strong><br><br>
                     
-                    <strong>איך להתחיל:</strong><br>
-                    1. הגדר את פרטי ה-GitHub בצד שמאל<br>
-                    2. (אופציונלי) הגדר כתובת תמונות<br>
-                    3. התחל לחפש מוצרים!
+                    <strong>איך החיפוש עובד:</strong><br>
+                    • המערכת מחפשת תחילה בשדה "פלטפורמה"<br>
+                    • אם לא מוצאת התאמה, מחפשת בשדות אחרים<br>
+                    • מציגה את התוצאה הטובה ביותר עם תמונה<br><br>
+                    
+                    <strong>התחל לחפש:</strong> הקלד שם פלטפורמה, מקט, או כל מידע אחר של המוצר.<br><br>
+                    
+                    <em>המערכת טוענת את הנתונים... אנא המתן כמה רגעים.</em>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="input-area">
                 <input type="text" id="searchInput" class="search-input" 
-                       placeholder="חפש מוצר (פלטפורמה, מקט, מתחם...)" 
+                       placeholder="חפש מוצר (פלטפורמה, מקט, מתחם, קמפיין...)" 
                        disabled>
                 <button id="searchBtn" class="search-btn" disabled>
                     <span>🔍</span>
@@ -640,9 +533,17 @@
     </div>
 
     <script>
+        // Configuration - Fixed settings (not visible to user)
+        const CONFIG = {
+            githubUser: 'print-imall',
+            githubRepo: 'company-chat',
+            excelFile: 'products.xlsx',
+            imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
+            imageFormat: 'direct' // [מקט].jpg format
+        };
+
         // Global variables
         let productsData = [];
-        let dropboxBaseUrl = '';
         
         // DOM elements
         const statusIndicator = document.getElementById('statusIndicator');
@@ -650,8 +551,6 @@
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const clearBtn = document.getElementById('clearBtn');
-        const dropboxUrlInput = document.getElementById('dropboxUrl');
-        const excelFileNameInput = document.getElementById('excelFileName');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
 
@@ -691,131 +590,16 @@
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        // Handle image name format selection
-        document.getElementById('imageNameFormat').addEventListener('change', function(e) {
-            const customDiv = document.getElementById('customFormatDiv');
-            if (e.target.value === 'custom') {
-                customDiv.style.display = 'block';
-            } else {
-                customDiv.style.display = 'none';
-            }
-        });
-
-        // Generate image URL based on format
+        // Generate image URL
         function generateImageUrl(productCode) {
-            const baseUrl = dropboxUrlInput.value.trim();
-            if (!baseUrl) return null;
-            
-            const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-            const format = document.getElementById('imageNameFormat').value;
-            let filename;
-            
-            switch(format) {
-                case 'direct':
-                    filename = `${productCode}.jpg`;
-                    break;
-                case 'prefix':
-                    filename = `product-${productCode}.jpg`;
-                    break;
-                case 'custom':
-                    const customFormat = document.getElementById('customImageFormat').value || '{מקט}.jpg';
-                    filename = customFormat.replace('{מקט}', productCode);
-                    break;
-                default:
-                    filename = `${productCode}.jpg`;
-            }
-            
-            return cleanBaseUrl + filename;
-        }
-
-        // Test image URL function
-        function testImageUrl() {
-            if (productsData.length === 0) {
-                addMessage('<div class="error-message"><strong>❌ אין נתונים:</strong> טען קודם את קובץ ה-Excel</div>');
-                return;
-            }
-            
-            const firstProduct = productsData[0];
-            const productCode = firstProduct['מקט'] || 'לא זמין';
-            const imageUrl = generateImageUrl(productCode);
-            
-            if (!imageUrl) {
-                addMessage('<div class="error-message"><strong>❌ אין כתובת תמונות:</strong> הגדר כתובת בסיס לתמונות</div>');
-                return;
-            }
-            
-            addMessage(`<strong>🧪 בודק תמונה לדוגמה:</strong><br>
-                      מקט: <code>${productCode}</code><br>
-                      URL: <code style="word-break: break-all;">${imageUrl}</code><br><br>
-                      <img src="${imageUrl}" style="max-width: 200px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" 
-                           onload="this.nextSibling.innerHTML='<strong style=\\"color: #28a745;\\">✅ תמונה נטענה בהצלחה!</strong>'" 
-                           onerror="this.nextSibling.innerHTML='<strong style=\\"color: #dc3545;\\">❌ לא ניתן לטעון תמונה - בדוק את ההגדרות</strong>'">
-                      <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">⏳ טוען תמונה...</div>`);
-        }
-
-        // Handle Dropbox URL configuration
-        dropboxUrlInput.addEventListener('input', function(e) {
-            dropboxBaseUrl = e.target.value.trim();
-        });
-
-        // Convert GitHub blob URL to raw URL
-        function convertToRawUrl(githubUrl) {
-            if (githubUrl.includes('github.com') && githubUrl.includes('/blob/')) {
-                return githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            }
-            return githubUrl;
-        }
-
-        // Get current repository info from URL
-        function getRepoInfo() {
-            const currentUrl = window.location.href;
-            
-            if (currentUrl.includes('github.io')) {
-                const parts = currentUrl.split('/');
-                const username = parts[2].replace('.github.io', '');
-                const repoName = parts[3] || username;
-                return { username, repoName };
-            }
-            
-            return { username: '', repoName: '' };
+            return CONFIG.imageBaseUrl + productCode + '.jpg';
         }
 
         // Load Excel data from GitHub repository
         async function loadExcelData() {
-            const fileUrl = document.getElementById('githubFileUrl').value.trim();
-            const fileName = 'products.xlsx';
-            const manualUsername = document.getElementById('githubUsername').value.trim();
-            const manualRepo = document.getElementById('githubRepo').value.trim();
-            
-            let githubUrl;
-            
-            if (fileUrl) {
-                githubUrl = convertToRawUrl(fileUrl);
-            } else if (manualUsername && manualRepo) {
-                githubUrl = `https://raw.githubusercontent.com/${manualUsername}/${manualRepo}/main/${fileName}`;
-            } else {
-                const autoDetected = getRepoInfo();
-                const username = autoDetected.username;
-                const repoName = autoDetected.repoName;
-                
-                if (!username || !repoName) {
-                    updateStatus('error', 'חסר מידע GitHub');
-                    addMessage(`
-                        <div class="error-message">
-                            <strong>❌ חסר מידע:</strong><br>
-                            אנא בחר אחת מהאפשרויות:<br><br>
-                            
-                            <strong>אפשרות 1:</strong> העתק את הקישור המלא לקובץ מ-GitHub<br>
-                            <strong>אפשרות 2:</strong> מלא שם משתמש ושם רפוזיטורי<br><br>
-                        </div>
-                    `);
-                    return;
-                }
-                
-                githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
-            }
-            
             updateStatus('loading', 'טוען נתונים מ-GitHub...');
+            
+            const githubUrl = `https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/main/${CONFIG.excelFile}`;
             
             try {
                 console.log('Loading from:', githubUrl);
@@ -836,46 +620,40 @@
                 productCount.textContent = productsData.length;
                 statsCard.style.display = 'block';
                 
-                updateStatus('ready', `נטענו ${productsData.length} מוצרים`);
-                addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
-                          נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
-                          <code>${githubUrl}</code>`);
+                updateStatus('ready', `מוכן! ${productsData.length} מוצרים`);
+                addMessage(`<strong>📊 המערכת מוכנה לשימוש!</strong><br>
+                          נטענו בהצלחה <strong>${productsData.length} מוצרים</strong> מהמאגר.<br><br>
+                          <strong>🎉 אתה יכול עכשיו להתחיל לחפש מוצרים!</strong>`);
                 
                 // Enable search
                 searchInput.disabled = false;
                 searchBtn.disabled = false;
                 
-                // Show sample of loaded data
+                // Show sample fields
                 if (productsData.length > 0) {
-                    const sampleFields = Object.keys(productsData[0]).slice(0, 5).join(', ');
-                    addMessage(`<strong>🔍 שדות זמינים:</strong> ${sampleFields}...`);
+                    const sampleFields = Object.keys(productsData[0]).join(', ');
+                    console.log('Available fields:', sampleFields);
                 }
                 
-                console.log('Sample data:', productsData.slice(0, 3));
+                console.log('Sample data:', productsData.slice(0, 2));
                 
             } catch (error) {
                 console.error('Error loading Excel:', error);
-                updateStatus('error', 'שגיאה בטעינת הנתונים');
+                updateStatus('error', 'שגיאה בטעינה');
                 
                 addMessage(`
                     <div class="error-message">
                         <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
                         ${error.message}<br><br>
                         
-                        <strong>URL שנבדק:</strong><br>
-                        <code style="word-break: break-all;">${githubUrl}</code><br><br>
-                        
-                        <strong>פתרונות אפשריים:</strong><br>
-                        1. בדוק שהקובץ קיים ב-GitHub<br>
-                        2. ודא שהרפוזיטורי ציבורי (Public)<br>
-                        3. נסה לפתוח את ה-URL הזה ישירות בדפדפן<br>
-                        4. בדוק שהקובץ הוא Excel תקין (.xlsx או .xls)
+                        אנא בדוק שקובץ ה-Excel קיים ברפוזיטורי GitHub ושהרפוזיטורי ציבורי.<br>
+                        נסה לרענן את הדף או פנה למנהל המערכת.
                     </div>
                 `);
             }
         }
 
-        // Calculate similarity between two strings (for fuzzy matching)
+        // Calculate similarity between two strings
         function calculateSimilarity(str1, str2) {
             if (str1.length === 0 || str2.length === 0) return 0;
             
@@ -908,22 +686,18 @@
                 let score = 0;
                 let matches = [];
 
-                // Exact match in platform
                 if (platformValue === queryLower) {
                     score = 1000;
                     matches.push('פלטפורמה: התאמה מושלמת');
                 }
-                // Platform contains full query
                 else if (platformValue.includes(queryLower) && queryLower.length > 1) {
                     score = 800;
                     matches.push('פלטפורמה: מכיל את החיפוש המלא');
                 }
-                // Platform starts with query
                 else if (platformValue.startsWith(queryLower)) {
                     score = 700;
                     matches.push('פלטפורמה: מתחיל בחיפוש');
                 }
-                // Check individual terms in platform
                 else {
                     searchTerms.forEach(term => {
                         if (term.length < 2) return;
@@ -949,19 +723,18 @@
                 return null;
             }).filter(item => item !== null);
 
-            // If we found results in platform, return the best one
+            // If found in platform, return the best
             if (platformResults.length > 0) {
-                const bestPlatformResult = platformResults.sort((a, b) => b.score - a.score)[0];
-                return [bestPlatformResult];
+                const bestResult = platformResults.sort((a, b) => b.score - a.score)[0];
+                return [bestResult];
             }
 
-            // Step 2: If no results in platform, search in all other fields
+            // Step 2: Search in other fields
             const generalResults = productsData.map(product => {
                 let score = 0;
                 let matches = [];
                 let highPriorityMatches = 0;
 
-                // Define other searchable fields (excluding platform which we already searched)
                 const searchFields = {
                     'מקט': { value: String(product['מקט'] || ''), priority: 10 },
                     'מתחם': { value: String(product['מתחם'] || ''), priority: 8 },
@@ -974,27 +747,24 @@
                     'רוחב2': { value: String(product['רוחב2'] || ''), priority: 3 }
                 };
 
-                // Check for exact phrase match first
+                // Exact phrase matching
                 Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
                     const fieldStr = fieldData.value.toLowerCase();
                     const queryLower = originalQuery.toLowerCase();
                     
                     if (fieldStr === queryLower) {
                         score += fieldData.priority * 15;
-                        matches.push(`${fieldName}: התאמה מלאה מושלמת`);
+                        matches.push(`${fieldName}: התאמה מושלמת`);
                         highPriorityMatches++;
-                        return;
                     }
-                    
-                    if (fieldStr.includes(queryLower) && queryLower.length > 2) {
+                    else if (fieldStr.includes(queryLower) && queryLower.length > 2) {
                         score += fieldData.priority * 12;
-                        matches.push(`${fieldName}: מכיל את החיפוש המלא`);
+                        matches.push(`${fieldName}: מכיל את החיפוש`);
                         if (fieldData.priority >= 8) highPriorityMatches++;
-                        return;
                     }
                 });
 
-                // Check individual terms
+                // Individual terms matching
                 searchTerms.forEach(term => {
                     if (term.length < 2) return;
                     
@@ -1003,24 +773,16 @@
                         
                         if (fieldStr === term) {
                             score += fieldData.priority * 10;
-                            matches.push(`${fieldName}: התאמה מלאה למונח "${term}"`);
+                            matches.push(`${fieldName}: מתאים ל-"${term}"`);
                             if (fieldData.priority >= 8) highPriorityMatches++;
                         }
                         else if (fieldStr.startsWith(term)) {
                             score += fieldData.priority * 8;
                             matches.push(`${fieldName}: מתחיל ב-"${term}"`);
-                            if (fieldData.priority >= 8) highPriorityMatches++;
                         }
                         else if (fieldStr.includes(term)) {
                             score += fieldData.priority * 5;
                             matches.push(`${fieldName}: מכיל "${term}"`);
-                        }
-                        else if (term.length > 3) {
-                            const similarity = calculateSimilarity(fieldStr, term);
-                            if (similarity > 0.7) {
-                                score += fieldData.priority * 3;
-                                matches.push(`${fieldName}: דומה ל-"${term}"`);
-                            }
                         }
                     });
                 });
@@ -1042,7 +804,7 @@
             return generalResults;
         }
 
-        // Display product result with enhanced styling
+        // Display product result
         function displayProductResult(item) {
             const { product, score, matches, searchLevel } = item;
             const confidence = searchLevel === 'platform' ? Math.min(100, Math.round((score / 10))) : Math.min(100, Math.round((score / 50) * 100));
@@ -1051,7 +813,7 @@
             const imageUrl = generateImageUrl(productCode);
 
             const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
-            const matchSummary = matches.slice(0, 3).join(', ');
+            const matchSummary = matches.slice(0, 2).join(', ');
             
             let html = `
                 <div class="product-result">
@@ -1095,55 +857,41 @@
                     </div>
             `;
 
-            if (imageUrl) {
-                html += `
-                    <div class="product-image">
-                        <div class="image-loading" id="img-${productCode}">
-                            <span>⏳ טוען תמונה...</span>
-                        </div>
-                        <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 8px; word-break: break-all;">
-                            URL: <code>${imageUrl}</code>
-                        </div>
+            // Add image section
+            html += `
+                <div class="product-image">
+                    <div class="image-loading" id="img-${productCode}">
+                        <span>⏳ טוען תמונה...</span>
                     </div>
-                `;
-            } else {
-                html += `
-                    <div class="no-image-placeholder">
-                        <span>📷</span><br>
-                        <strong>לא הוגדרה כתובת תמונות</strong><br>
-                        <small>הגדר כתובת בסיס לתמונות בהגדרות</small>
-                    </div>
-                `;
-            }
+                </div>
+            `;
 
             html += `</div>`;
             addMessage(html);
 
-            // Try to load image with detailed feedback
-            if (imageUrl) {
-                const img = new Image();
-                const imageContainer = document.getElementById(`img-${productCode}`);
-                
-                img.onload = function() {
-                    if (imageContainer) {
-                        imageContainer.innerHTML = `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}">`;
-                    }
-                };
-                
-                img.onerror = function() {
-                    if (imageContainer) {
-                        imageContainer.innerHTML = `
-                            <div style="color: rgba(255,255,255,0.8); padding: 15px;">
-                                <span>❌</span><br>
-                                <strong>לא נמצאה תמונה</strong><br>
-                                <small>מקט: ${productCode}</small>
-                            </div>
-                        `;
-                    }
-                };
-                
-                img.src = imageUrl;
-            }
+            // Try to load image
+            const img = new Image();
+            const imageContainer = document.getElementById(`img-${productCode}`);
+            
+            img.onload = function() {
+                if (imageContainer) {
+                    imageContainer.innerHTML = `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}">`;
+                }
+            };
+            
+            img.onerror = function() {
+                if (imageContainer) {
+                    imageContainer.innerHTML = `
+                        <div class="no-image-placeholder">
+                            <span>📷</span><br>
+                            <strong>אין תמונה זמינה</strong><br>
+                            <small>מקט: ${productCode}</small>
+                        </div>
+                    `;
+                }
+            };
+            
+            img.src = imageUrl;
         }
 
         // Handle search
@@ -1158,8 +906,12 @@
             if (results.length === 0) {
                 addMessage(`<div class="error-message">
                     <strong>🔍 לא נמצאו תוצאות</strong><br>
-                    לא נמצא מוצר התואם לחיפוש "${query}".<br>
-                    נסה חיפוש אחר או בדוק את האיות.
+                    לא נמצא מוצר התואם לחיפוש "<strong>${query}</strong>".<br><br>
+                    <strong>טיפים לחיפוש טוב יותר:</strong><br>
+                    • נסה להקליד שם פלטפורמה מדויק<br>
+                    • בדוק את האיות<br>
+                    • נסה מילים קצרות יותר<br>
+                    • נסה לחפש לפי מספר מקט
                 </div>`);
             } else {
                 displayProductResult(results[0]);
