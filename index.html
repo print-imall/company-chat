@@ -396,8 +396,8 @@
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
                 <div style="background:rgba(255,255,255,0.95);padding:18px 12px;border-radius:10px;max-width:700px;margin:auto;">
                     <div style="margin-bottom:10px;">
-                        <label><b>בחר קניונים:</b></label><br>
-                        <select id="ganttMalls" multiple style="width:100%;min-height:90px;font-size:15px;border-radius:7px;border:1px solid #bbb;padding:6px;"></select>
+                        <label><b>בחר מתחם:</b></label><br>
+                        <select id="ganttMall" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;"></select>
                     </div>
                     <div style="margin-bottom:10px;">
                         <label><b>סוג קמפיין:</b></label>
@@ -406,6 +406,10 @@
                             <option value="פרינט">פרינט</option>
                             <option value="דיגיטלי">דיגיטלי</option>
                         </select>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label><b>הזן תקציב (₪):</b></label><br>
+                        <input type="number" id="ganttBudget" min="0" step="1" placeholder="הכנס תקציב" style="width:100%;font-size:16px;border-radius:7px;border:1px solid #bbb;padding:7px;">
                     </div>
                     <button id="ganttCalcBtn" style="padding:14px 38px;font-size:18px;font-weight:700;border-radius:16px;background:linear-gradient(95deg,#007bff,#0056b3);color:white;border:none;cursor:pointer;margin-bottom:20px;">חשב תקציב</button>
                     <div id="ganttResults"></div>
@@ -496,7 +500,7 @@
                     const sampleFields = Object.keys(productsData[0]).join(', ');
                     addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
                 }
-                updateGanttMallsOptions();
+                updateGanttMallOptions();
             } catch (error) {
                 updateStatus('error', 'שגיאה בטעינה');
                 let errorHelp = '';
@@ -603,22 +607,34 @@
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
 
-        // ----------- GANTT MODULE --------------
-        let ganttMallsList = [];
-        function updateGanttMallsOptions() {
+
+        // ----------- GANTT MODULE (SINGLE SELECT + BUDGET) --------------
+        function updateGanttMallOptions() {
             if(!window.productsData) return;
-            const mallSelect = document.getElementById('ganttMalls');
+            const mallSelect = document.getElementById('ganttMall');
             const malls = Array.from(new Set(productsData.map(p=>p['מתחם']).filter(Boolean))).sort();
-            ganttMallsList = malls;
             mallSelect.innerHTML = malls.map(m=>`<option value="${m}">${m}</option>`).join('');
         }
-        function filterGanttProducts(selectedMalls, type) {
-            return productsData.filter(p=>{
-                if(selectedMalls.length && !selectedMalls.includes(p['מתחם'])) return false;
+        function filterGanttProducts(selectedMall, type, budget) {
+            let filtered = productsData.filter(p=>{
+                if(selectedMall && p['מתחם'] !== selectedMall) return false;
                 if(type==='פרינט' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('פרינט'))) return false;
                 if(type==='דיגיטלי' && (!p['פלטפורמה']||!p['פלטפורמה'].includes('דיגיטלי'))) return false;
                 return true;
             });
+            // אם הוזן תקציב, הגבל לסכום המצטבר
+            if(budget && !isNaN(budget) && budget>0) {
+                let sum = 0, limited = [];
+                for(let p of filtered) {
+                    let price = Number(String(p['מחיר מכירה']||'0').replace(/[^0-9.]/g,''));
+                    if(isNaN(price)) price=0;
+                    if(sum+price > budget) break;
+                    sum += price;
+                    limited.push(p);
+                }
+                return limited;
+            }
+            return filtered;
         }
         function renderGanttTable(products) {
             if(!products.length) return "<div style='color:#b00;font-weight:700'>לא נמצאו אלמנטים תואמים</div>";
@@ -652,14 +668,14 @@
             return tbl + `<div style="margin-top:20px"><b>הדמיית גאנט:</b><br>${bars}</div>`;
         }
         document.getElementById('ganttCalcBtn').onclick = function(){
-            const mallSelect = document.getElementById('ganttMalls');
-            const selectedMalls = Array.from(mallSelect.selectedOptions).map(o=>o.value);
+            const mallSelect = document.getElementById('ganttMall');
+            const selectedMall = mallSelect.value;
             const type = document.getElementById('ganttType').value;
-            const products = filterGanttProducts(selectedMalls, type);
+            const budget = Number(document.getElementById('ganttBudget').value);
+            const products = filterGanttProducts(selectedMall, type, budget);
             document.getElementById('ganttResults').innerHTML = renderGanttTable(products);
         };
-        // עדכן רשימת קניונים אחרי טעינת נתונים
-        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallsOptions, 300);}
+        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallOptions, 300);}
         window.addEventListener('load',function(){
             setTimeout(function() { loadExcelData(); }, 700);
             afterLoadProductsForGantt();
