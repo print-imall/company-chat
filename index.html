@@ -607,6 +607,9 @@
                     const sampleFields = Object.keys(productsData[0]).join(', ');
                     addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
                 }
+                
+                // עדכון רשימת המתחמים לטאב הגאנט
+                console.log('קורא לעדכון רשימת מתחמים...');
                 updateGanttMallOptions();
             } catch (error) {
                 updateStatus('error', 'שגיאה בטעינה');
@@ -748,7 +751,8 @@
 
         // עדכון רשימת המתחמים עבור הגאנט
         function updateGanttMallOptions() {
-            if (!window.productsData || !Array.isArray(productsData) || productsData.length === 0) return;
+            console.log('מעדכן רשימת מתחמים...', productsData.length);
+            if (!productsData || !Array.isArray(productsData) || productsData.length === 0) return;
             
             const allMallsSet = new Set();
             productsData.forEach(p => {
@@ -759,15 +763,25 @@
             });
             
             allMalls = Array.from(allMallsSet).sort();
+            console.log('נמצאו מתחמים:', allMalls);
             updateMallsDropdown();
         }
 
         // יצירת רשימה נפתחת רב-בחירה למתחמים
         function updateMallsDropdown() {
             const dropdown = document.getElementById('mallsDropdown');
-            if (!dropdown) return;
+            if (!dropdown) {
+                console.log('לא נמצא אלמנט mallsDropdown');
+                return;
+            }
             
+            console.log('מעדכן רשימה נפתחת עם', allMalls.length, 'מתחמים');
             dropdown.innerHTML = '';
+            
+            if (allMalls.length === 0) {
+                dropdown.innerHTML = '<div class="multi-select-option">אין מתחמים זמינים</div>';
+                return;
+            }
             
             // אפשרות "בחר הכל"
             const selectAllOption = document.createElement('div');
