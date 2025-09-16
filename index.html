@@ -1070,7 +1070,7 @@
                                 </tr>`;
             }
             
-            // Add dimensions 2 if exists
+            // Add dimensions 2 if exists  
             if (hasDimensions2) {
                 html += `
                                 <tr>
@@ -1149,7 +1149,7 @@
             
             // Get all product data
             const rows = table.querySelectorAll('tr');
-            let productText = `📦 *פרטי מוצר - מקט: ${productCode}*\n\n`;
+            let productText = '📦 *פרטי מוצר - מקט: ' + productCode + '*\n\n';
             
             rows.forEach(row => {
                 const th = row.querySelector('th');
@@ -1157,7 +1157,7 @@
                 if (th && td) {
                     const label = th.textContent.trim();
                     const value = td.textContent.trim();
-                    productText += `*${label}:* ${value}\n`;
+                    productText += '*' + label + ':* ' + value + '\n';
                 }
             });
             
@@ -1166,7 +1166,7 @@
             if (detailsSection && detailsSection.classList.contains('show')) {
                 const detailsTable = detailsSection.querySelector('.product-table');
                 if (detailsTable) {
-                    productText += `\n*פרטים נוספים:*\n`;
+                    productText += '\n*פרטים נוספים:*\n';
                     const detailRows = detailsTable.querySelectorAll('tr');
                     detailRows.forEach(row => {
                         const th = row.querySelector('th');
@@ -1174,7 +1174,7 @@
                         if (th && td) {
                             const label = th.textContent.trim();
                             const value = td.textContent.trim();
-                            productText += `*${label}:* ${value}\n`;
+                            productText += '*' + label + ':* ' + value + '\n';
                         }
                     });
                 }
@@ -1182,21 +1182,19 @@
             
             // Add image info
             const imageUrl = generateImageUrl(productCode);
-            productText += `\n📷 *תמונה:* ${imageUrl}`;
+            productText += '\n📷 *תמונה:* ' + imageUrl;
             
             // Add company signature
-            productText += `\n\n---\n📡 נשלח ממערכת צ'אט החברה`;
+            productText += '\n\n---\n📡 נשלח ממערכת צ\'אט החברה';
             
             // Create WhatsApp link
-            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(productText)}`;
+            const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
             
             // Open WhatsApp
             window.open(whatsappUrl, '_blank');
             
             // Show confirmation
-            addMessage(`<strong>📱 שיתוף בוואטסאפ</strong><br>
-                       הנתונים של מקט ${productCode} נשלחו לוואטסאפ!<br>
-                       <small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>`);
+            addMessage('<strong>📱 שיתוף בוואטסאפ</strong><br>הנתונים של מקט ' + productCode + ' נשלחו לוואטסאפ!<br><small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
         }
 
         // Handle search
