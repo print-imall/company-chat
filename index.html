@@ -512,19 +512,27 @@
             .slice(0, 5);
         }
 
-        // Display product result
+        // Display product result with search level info
         function displayProductResult(item) {
-            const { product, score, matches } = item;
-            const confidence = Math.min(100, Math.round((score / 10) * 100));
+            const { product, score, matches, searchLevel } = item;
+            const confidence = searchLevel === 'platform' ? Math.min(100, Math.round((score / 10))) : Math.min(100, Math.round((score / 50) * 100));
             
             const productCode = product['מקט'] || 'לא זמין';
             const imageUrl = dropboxBaseUrl ? `${dropboxBaseUrl}${productCode}.jpg` : '';
 
+            // Show search method and matching info
+            const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
+            const matchSummary = matches.slice(0, 3).join(', ');
+            
             let html = `
                 <div class="product-result">
                     <div class="product-header">
                         <div class="product-code">מקט: ${productCode}</div>
                         <div class="confidence-score">רמת התאמה: ${confidence}%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 5px; margin-bottom: 15px; font-size: 12px;">
+                        <div><strong>${searchMethod}</strong></div>
+                        <div><strong>סיבת ההתאמה:</strong> ${matchSummary}</div>
                     </div>
                     <div class="product-details">
                         <div class="detail-item">
@@ -533,7 +541,7 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">פלטפורמה</div>
-                            <div class="detail-value">${product['פלטפורמה'] || 'לא זמין'}</div>
+                            <div class="detail-value" style="background: rgba(255,255,255,0.1); font-weight: bold;">${product['פלטפורמה'] || 'לא זמין'}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">מחיר מכירה</div>
