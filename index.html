@@ -419,7 +419,6 @@
         </div>
     </div>
     <script>
-        // --- פונקציית סטטוס --- (חובה בראש)
         function updateStatus(status, text) {
             var statusIndicator = document.getElementById('statusIndicator');
             if (!statusIndicator) return;
@@ -430,7 +429,6 @@
             statusIndicator.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
         }
 
-        // --- משתנים גלובליים וקונפיג ---
         const CONFIG = {
             githubUser: 'print-imall',
             githubRepo: 'company-chat',
@@ -439,15 +437,12 @@
             imageFormat: 'direct'
         };
         let productsData = [];
-        const statusIndicator = document.getElementById('statusIndicator');
         const messagesArea = document.getElementById('messagesArea');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
-        const clearBtn = document.getElementById('clearBtn');
         const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
 
-        // --- פונקציות עזר ---
         function clearHistory() {
             const systemMessages = messagesArea.querySelectorAll('.message.system');
             const firstSystemMessage = systemMessages[0];
@@ -467,7 +462,6 @@
             return CONFIG.imageBaseUrl + productCode + '.jpg';
         }
 
-        // --- טעינת נתוני אקסל ---
         async function loadExcelData() {
             updateStatus('loading', 'מתחיל טעינה...');
             const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
@@ -486,12 +480,6 @@
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 if (jsonData.length === 0) throw new Error('הקובץ לא מכיל נתונים');
                 productsData = jsonData;
-                // לוגים חשובים!
-                console.log('productsData:', productsData.slice(0,5), 'סה"כ:', productsData.length);
-                if(productsData.length > 0){
-                    console.log('מפתחות דוגמה:', Object.keys(productsData[0]));
-                    console.log('ערך "מתחם" ראשון:', productsData[0]['מתחם']);
-                }
                 productCount.textContent = productsData.length;
                 statsCard.style.display = 'block';
                 updateStatus('ready', 'מוכן! ' + productsData.length + ' מוצרים');
@@ -513,7 +501,6 @@
             }
         }
 
-        // --- טאב חיפוש: כל התוצאות ---
         function searchProducts(query) {
             if (!query.trim()) return [];
             const originalQuery = query.trim();
@@ -523,9 +510,8 @@
                 return searchTerms.every(term=>plat.includes(term));
             });
             if(platformResults.length > 0) {
-                return platformResults.slice(0,30).map(product => ({product}));
+                return platformResults.slice(0, 30).map(product => ({product}));
             }
-            // fallback - ניקוד
             let scored = productsData.map(product => {
                 let count = 0;
                 Object.values(product).forEach(val=>{
@@ -536,9 +522,10 @@
                 return {product, count};
             }).filter(obj => obj.count>0)
               .sort((a,b)=>b.count-a.count)
-              .slice(0,30);
+              .slice(0, 30);
             return scored.map(obj=>({product: obj.product}));
         }
+
         function displayAllProductResults(items) {
             items.forEach(displayProductResult);
         }
@@ -611,39 +598,15 @@
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
 
-        // --- גאנט: עדכון רשימת מתחמים עם לוגים ---
         function updateGanttMallOptions() {
-            console.log('קריאה ל-updateGanttMallOptions');
-            if(!window.productsData) {
-                console.log('productsData לא מוגדר');
-                return;
-            }
-            if(!Array.isArray(productsData)) {
-                console.log('productsData הוא לא מערך:', productsData);
-                return;
-            }
-            if(productsData.length === 0) {
-                console.log('productsData ריק!');
-                return;
-            }
-            console.log('productsData:', productsData.slice(0, 5), '...סה"כ:', productsData.length);
-            if(productsData.length > 0) {
-                console.log('מפתחות של שורה ראשונה:', Object.keys(productsData[0]));
-            }
+            if(!window.productsData || !Array.isArray(productsData) || productsData.length === 0) return;
             const mallSelect = document.getElementById('ganttMall');
-            if(!mallSelect) {
-                console.log('לא נמצא select עם id=ganttMall');
-                return;
-            }
+            if(!mallSelect) return;
             const allMalls = productsData.map(p=>p['מתחם']);
-            console.log('כל הערכים בעמודת מתחם:', allMalls);
             const malls = Array.from(new Set(allMalls.filter(Boolean))).sort();
-            console.log('המתחמים הייחודיים:', malls);
             mallSelect.innerHTML = '<option value="">כל הקניונים</option>' + malls.map(m=>`<option value="${m}">${m}</option>`).join('');
-            console.log('תוכן הרשימה (innerHTML):', mallSelect.innerHTML);
         }
 
-        // --- גאנט: סיכום תקציב לכל קניון ---
         function renderGanttTableSummaryByMall(type, budget, selectedMall) {
             let mallSums = {};
             let allMalls = [];
@@ -702,7 +665,6 @@
             document.getElementById('ganttResults').innerHTML = renderGanttTableSummaryByMall(type, budget, selectedMall);
         };
 
-        // --- Tabs ---
         const tabSearch = document.getElementById('tabSearch');
         const tabGantt = document.getElementById('tabGantt');
         const tabSearchPanel = document.getElementById('tabSearchPanel');
@@ -716,11 +678,8 @@
             tabGanttPanel.style.display='block'; tabSearchPanel.style.display='none';
         }
 
-        // --- הפעלה אוטומטית ---
-        function afterLoadProductsForGantt(){ setTimeout(updateGanttMallOptions, 300);}
         window.addEventListener('load',function(){
             setTimeout(function() { loadExcelData(); }, 700);
-            afterLoadProductsForGantt();
         });
     </script>
 </body>
