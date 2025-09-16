@@ -804,7 +804,7 @@
             return generalResults;
         }
 
-        // Display product result
+        // Display product result with compact view
         function displayProductResult(item) {
             const { product, score, matches, searchLevel } = item;
             const confidence = searchLevel === 'platform' ? Math.min(100, Math.round((score / 10))) : Math.min(100, Math.round((score / 50) * 100));
@@ -813,60 +813,88 @@
             const imageUrl = generateImageUrl(productCode);
 
             const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
-            const matchSummary = matches.slice(0, 2).join(', ');
+            const uniqueId = 'product-' + Date.now();
             
             let html = `
-                <div class="product-result">
-                    <div class="product-header">
-                        <div class="product-code">מקט: ${productCode}</div>
-                        <div class="confidence-score">רמת התאמה: ${confidence}%</div>
+                <div class="product-result" id="${uniqueId}">
+                    <!-- Compact View -->
+                    <div class="product-compact">
+                        <!-- Image -->
+                        <div class="product-image-compact">
+                            <div class="image-loading" id="img-${productCode}">
+                                ⏳ טוען תמונה...
+                            </div>
+                        </div>
+                        
+                        <!-- Info Table -->
+                        <div class="product-info-compact">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3 style="margin: 0; font-size: 18px;">מקט: ${productCode}</h3>
+                                <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">
+                                    ${confidence}% התאמה
+                                </span>
+                            </div>
+                            
+                            <table class="product-table">
+                                <tbody>
+                                    <tr${searchLevel === 'platform' ? ' class="highlight-row"' : ''}>
+                                        <th>פלטפורמה</th>
+                                        <td><strong>${product['פלטפורמה'] || 'לא זמין'}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>מתחם</th>
+                                        <td>${product['מתחם'] || 'לא זמין'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>מחיר מכירה</th>
+                                        <td>${product['מחיר מכירה'] || 'לא זמין'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>קמפיין</th>
+                                        <td>${product['קמפיין'] || 'לא זמין'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div class="action-buttons-product">
+                                <button class="btn-expand" onclick="toggleProductDetails('${uniqueId}')">
+                                    📋 פרטים נוספים
+                                </button>
+                                <button class="btn-share" onclick="shareProduct('${uniqueId}', '${productCode}')">
+                                    📱 שתף בוואטסאפ
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="match-info">
-                        <div><strong>${searchMethod}</strong></div>
-                        <div><strong>סיבת ההתאמה:</strong> ${matchSummary}</div>
-                    </div>
-                    <div class="product-details">
-                        <div class="detail-item">
-                            <div class="detail-label">מתחם</div>
-                            <div class="detail-value">${product['מתחם'] || 'לא זמין'}</div>
+                    
+                    <!-- Full Details (Hidden by default) -->
+                    <div class="product-details-full" id="${uniqueId}-details">
+                        <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px;">
+                            <strong>${searchMethod}</strong><br>
+                            <strong>סיבת ההתאמה:</strong> ${matches.slice(0, 2).join(', ')}
                         </div>
-                        <div class="detail-item ${searchLevel === 'platform' ? 'highlight' : ''}">
-                            <div class="detail-label">פלטפורמה</div>
-                            <div class="detail-value">${product['פלטפורמה'] || 'לא זמין'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">מחיר מכירה</div>
-                            <div class="detail-value">${product['מחיר מכירה'] || 'לא זמין'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">מבקרים</div>
-                            <div class="detail-value">${product['מבקרים'] || 'לא זמין'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">גובה × רוחב</div>
-                            <div class="detail-value">${product['גובה'] || '?'} × ${product['רוחב'] || '?'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">גובה2 × רוחב2</div>
-                            <div class="detail-value">${product['גובה2'] || '?'} × ${product['רוחב2'] || '?'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">קמפיין</div>
-                            <div class="detail-value">${product['קמפיין'] || 'לא זמין'}</div>
-                        </div>
-                    </div>
-            `;
-
-            // Add image section
-            html += `
-                <div class="product-image">
-                    <div class="image-loading" id="img-${productCode}">
-                        <span>⏳ טוען תמונה...</span>
+                        
+                        <h4 style="margin: 0 0 10px 0;">פרטים מלאים:</h4>
+                        <table class="product-table">
+                            <tbody>
+                                <tr>
+                                    <th>מבקרים</th>
+                                    <td>${product['מבקרים'] || 'לא זמין'}</td>
+                                </tr>
+                                <tr>
+                                    <th>גובה × רוחב</th>
+                                    <td>${product['גובה'] || '?'} × ${product['רוחב'] || '?'}</td>
+                                </tr>
+                                <tr>
+                                    <th>גובה2 × רוחב2</th>
+                                    <td>${product['גובה2'] || '?'} × ${product['רוחב2'] || '?'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
 
-            html += `</div>`;
             addMessage(html);
 
             // Try to load image
@@ -883,8 +911,8 @@
                 if (imageContainer) {
                     imageContainer.innerHTML = `
                         <div class="no-image-placeholder">
-                            <span>📷</span><br>
-                            <strong>אין תמונה זמינה</strong><br>
+                            <span style="font-size: 24px;">📷</span><br>
+                            <strong>אין תמונה</strong><br>
                             <small>מקט: ${productCode}</small>
                         </div>
                     `;
@@ -892,6 +920,82 @@
             };
             
             img.src = imageUrl;
+        }
+
+        // Toggle product details
+        function toggleProductDetails(productId) {
+            const productResult = document.getElementById(productId);
+            const detailsSection = document.getElementById(productId + '-details');
+            const expandButton = productResult.querySelector('.btn-expand');
+            
+            if (detailsSection.classList.contains('show')) {
+                detailsSection.classList.remove('show');
+                productResult.classList.remove('expanded');
+                expandButton.innerHTML = '📋 פרטים נוספים';
+            } else {
+                detailsSection.classList.add('show');
+                productResult.classList.add('expanded');
+                expandButton.innerHTML = '📋 סגור פרטים';
+            }
+        }
+
+        // Share product to WhatsApp
+        function shareProduct(productId, productCode) {
+            const productResult = document.getElementById(productId);
+            const table = productResult.querySelector('.product-table');
+            
+            if (!table) return;
+            
+            // Get all product data
+            const rows = table.querySelectorAll('tr');
+            let productText = `📦 *פרטי מוצר - מקט: ${productCode}*\n\n`;
+            
+            rows.forEach(row => {
+                const th = row.querySelector('th');
+                const td = row.querySelector('td');
+                if (th && td) {
+                    const label = th.textContent.trim();
+                    const value = td.textContent.trim();
+                    productText += `*${label}:* ${value}\n`;
+                }
+            });
+            
+            // Add additional details if expanded
+            const detailsSection = document.getElementById(productId + '-details');
+            if (detailsSection && detailsSection.classList.contains('show')) {
+                const detailsTable = detailsSection.querySelector('.product-table');
+                if (detailsTable) {
+                    productText += `\n*פרטים נוספים:*\n`;
+                    const detailRows = detailsTable.querySelectorAll('tr');
+                    detailRows.forEach(row => {
+                        const th = row.querySelector('th');
+                        const td = row.querySelector('td');
+                        if (th && td) {
+                            const label = th.textContent.trim();
+                            const value = td.textContent.trim();
+                            productText += `*${label}:* ${value}\n`;
+                        }
+                    });
+                }
+            }
+            
+            // Add image info
+            const imageUrl = generateImageUrl(productCode);
+            productText += `\n📷 *תמונה:* ${imageUrl}`;
+            
+            // Add company signature
+            productText += `\n\n---\n📡 נשלח ממערכת צ'אט החברה`;
+            
+            // Create WhatsApp link
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(productText)}`;
+            
+            // Open WhatsApp
+            window.open(whatsappUrl, '_blank');
+            
+            // Show confirmation
+            addMessage(`<strong>📱 שיתוף בוואטסאפ</strong><br>
+                       הנתונים של מקט ${productCode} נשלחו לוואטסאפ!<br>
+                       <small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>`);
         }
 
         // Handle search
