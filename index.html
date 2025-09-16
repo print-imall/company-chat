@@ -201,104 +201,152 @@
             margin: 20px 0;
             box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
         }
 
-        .product-header {
+        .product-result.expanded {
+            max-height: none;
+        }
+
+        .product-compact {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
+            align-items: flex-start;
         }
 
-        .product-code {
-            font-size: 20px;
-            font-weight: 700;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px 16px;
+        .product-image-compact {
+            flex-shrink: 0;
+            width: 150px;
+        }
+
+        .product-image-compact img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
             border-radius: 12px;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .confidence-score {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
+        .product-info-compact {
+            flex: 1;
         }
 
-        .match-info {
-            background: rgba(255, 255, 255, 0.15);
+        .product-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .product-table th,
+        .product-table td {
             padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            backdrop-filter: blur(10px);
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .product-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .detail-item {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            transition: transform 0.2s ease;
-        }
-
-        .detail-item:hover {
-            transform: translateY(-2px);
-        }
-
-        .detail-label {
+        .product-table th {
+            background: rgba(255, 255, 255, 0.2);
             font-weight: 600;
-            margin-bottom: 8px;
-            opacity: 0.9;
-            font-size: 13px;
+            font-size: 14px;
         }
 
-        .detail-value {
-            font-size: 16px;
+        .product-table td {
+            font-size: 15px;
             font-weight: 500;
         }
 
-        .detail-item.highlight {
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.4);
+        .product-table tr:last-child td {
+            border-bottom: none;
         }
 
-        .product-image {
-            text-align: center;
+        .product-table .highlight-row {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .action-buttons-product {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .btn-expand {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-expand:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-share {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        .product-details-full {
+            display: none;
             margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .product-image img {
-            max-width: 100%;
-            max-height: 350px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .product-image img:hover {
-            transform: scale(1.05);
+        .product-details-full.show {
+            display: block;
         }
 
         .image-loading {
+            width: 100%;
+            height: 120px;
             background: rgba(255, 255, 255, 0.15);
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             backdrop-filter: blur(10px);
             animation: pulse 1.5s infinite;
+        }
+
+        .no-image-placeholder {
+            width: 100%;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
         }
 
         .input-area {
@@ -382,20 +430,27 @@
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
         }
 
-        .no-image-placeholder {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 20px;
-            color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
+        /* Mobile responsiveness for compact view */
+        @media (max-width: 768px) {
+            .product-compact {
+                flex-direction: column;
+            }
+            
+            .product-image-compact {
+                width: 100%;
+            }
+            
+            .product-image-compact img {
+                height: 200px;
+            }
+            
+            .action-buttons-product {
+                flex-direction: column;
+            }
 
-        /* Responsive Design */
-        @media (max-width: 1000px) {
             .main-container {
                 flex-direction: column;
+                padding: 15px;
             }
             
             .sidebar {
@@ -409,34 +464,6 @@
                 min-width: 250px;
                 flex-shrink: 0;
             }
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 15px;
-            }
-            
-            .sidebar {
-                flex-direction: column;
-            }
-            
-            .sidebar > * {
-                min-width: auto;
-            }
-            
-            .product-details {
-                grid-template-columns: 1fr;
-            }
-            
-            .product-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .input-area {
-                flex-direction: column;
-                padding: 15px;
-            }
             
             .header {
                 padding: 20px 15px;
@@ -444,6 +471,21 @@
             
             .header h1 {
                 font-size: 24px;
+            }
+
+            .input-area {
+                flex-direction: column;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar {
+                flex-direction: column;
+            }
+            
+            .sidebar > * {
+                min-width: auto;
             }
         }
 
@@ -534,13 +576,13 @@
     </div>
 
     <script>
-        // Configuration - Fixed settings (not visible to user)
+        // Configuration - Fixed settings
         const CONFIG = {
             githubUser: 'print-imall',
             githubRepo: 'company-chat',
             excelFile: 'products.xlsx',
             imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
-            imageFormat: 'direct' // [מקט].jpg format
+            imageFormat: 'direct'
         };
 
         // Global variables
@@ -558,13 +600,13 @@
         // Update status indicator
         function updateStatus(status, text) {
             const statusEl = document.getElementById('statusIndicator');
-            statusEl.className = `status-indicator ${status}`;
+            statusEl.className = 'status-indicator ' + status;
             
             let icon = '⏳';
             if (status === 'ready') icon = '✅';
             else if (status === 'error') icon = '❌';
             
-            statusEl.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+            statusEl.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
         }
 
         // Clear chat history
@@ -572,20 +614,19 @@
             const systemMessages = messagesArea.querySelectorAll('.message.system');
             const firstSystemMessage = systemMessages[0];
             
-            // Keep only the first system message
             messagesArea.innerHTML = '';
             if (firstSystemMessage) {
                 messagesArea.appendChild(firstSystemMessage);
             }
             
-            // Add confirmation message
             addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
         }
 
         // Add message to chat
-        function addMessage(content, type = 'system') {
+        function addMessage(content, type) {
+            type = type || 'system';
             const message = document.createElement('div');
-            message.className = `message ${type}`;
+            message.className = 'message ' + type;
             message.innerHTML = content;
             messagesArea.appendChild(message);
             messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -596,43 +637,34 @@
             return CONFIG.imageBaseUrl + productCode + '.jpg';
         }
 
-        // Load Excel data from GitHub repository with enhanced diagnostics
+        // Load Excel data from GitHub repository
         async function loadExcelData() {
             updateStatus('loading', 'מתחיל טעינה...');
             
-            const githubUrl = `https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/main/${CONFIG.excelFile}`;
+            const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
             
-            // Add detailed logging
-            console.log('=== LOADING DIAGNOSTICS ===');
-            console.log('Config:', CONFIG);
-            console.log('Attempting to load from:', githubUrl);
+            console.log('Loading from:', githubUrl);
             
             try {
                 updateStatus('loading', 'מתחבר ל-GitHub...');
-                console.log('Starting fetch...');
                 
                 const response = await fetch(githubUrl);
                 console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.log('Error response text:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText.substring(0, 200)}...`);
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                 }
                 
                 updateStatus('loading', 'מוריד קובץ...');
-                console.log('Getting arrayBuffer...');
                 
                 const arrayBuffer = await response.arrayBuffer();
                 console.log('ArrayBuffer size:', arrayBuffer.byteLength, 'bytes');
                 
                 if (arrayBuffer.byteLength === 0) {
-                    throw new Error('הקובץ שהתקבל ריק (0 bytes)');
+                    throw new Error('הקובץ שהתקבל ריק');
                 }
                 
                 updateStatus('loading', 'מעבד קובץ Excel...');
-                console.log('Processing Excel file...');
                 
                 const data = new Uint8Array(arrayBuffer);
                 const workbook = XLSX.read(data, {type: 'array'});
@@ -643,134 +675,54 @@
                 }
                 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                console.log('First sheet name:', workbook.SheetNames[0]);
-                
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 console.log('Parsed rows:', jsonData.length);
-                console.log('First row keys:', jsonData.length > 0 ? Object.keys(jsonData[0]) : 'No data');
-                console.log('Sample data:', jsonData.slice(0, 2));
                 
                 if (jsonData.length === 0) {
-                    throw new Error('הקובץ לא מכיל נתונים או שהפורמט לא נתמך');
+                    throw new Error('הקובץ לא מכיל נתונים');
                 }
                 
                 productsData = jsonData;
                 productCount.textContent = productsData.length;
                 statsCard.style.display = 'block';
                 
-                updateStatus('ready', `מוכן! ${productsData.length} מוצרים`);
-                addMessage(`<strong>📊 המערכת מוכנה לשימוש!</strong><br>
-                          נטענו בהצלחה <strong>${productsData.length} מוצרים</strong> מהמאגר.<br><br>
-                          <strong>🎉 אתה יכול עכשיו להתחיל לחפש מוצרים!</strong>`);
+                updateStatus('ready', 'מוכן! ' + productsData.length + ' מוצרים');
+                addMessage('<strong>📊 המערכת מוכנה לשימוש!</strong><br>נטענו בהצלחה <strong>' + productsData.length + ' מוצרים</strong> מהמאגר.<br><br><strong>🎉 אתה יכול עכשיו להתחיל לחפש מוצרים!</strong>');
                 
-                // Enable search
                 searchInput.disabled = false;
                 searchBtn.disabled = false;
                 
-                // Show sample fields for debugging
                 if (productsData.length > 0) {
                     const sampleFields = Object.keys(productsData[0]).join(', ');
                     console.log('Available fields:', sampleFields);
-                    
-                    // Show fields in UI for debugging
-                    addMessage(`<strong>🔍 שדות זמינים בקובץ:</strong><br>
-                              <code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">${sampleFields}</code>`);
+                    addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
                 }
-                
-                console.log('=== LOADING SUCCESS ===');
                 
             } catch (error) {
-                console.error('=== LOADING ERROR ===', error);
+                console.error('Error loading Excel:', error);
                 updateStatus('error', 'שגיאה בטעינה');
                 
-                // Determine error type and provide specific help
                 let errorHelp = '';
                 if (error.message.includes('404')) {
-                    errorHelp = `
-                        <strong>🔍 הקובץ לא נמצא:</strong><br>
-                        • בדוק שהקובץ "${CONFIG.excelFile}" קיים ברפוזיטורי<br>
-                        • בדוק שהשם נכון (כולל סיומת .xlsx)<br>
-                        • בדוק שהקובץ נמצא בתיקיה הראשית (לא בתת-תיקיה)<br><br>
-                        
-                        <strong>🔗 קישור שנבדק:</strong><br>
-                        <code style="word-break: break-all; font-size: 11px;">${githubUrl}</code><br><br>
-                        
-                        <strong>💡 נסה לפתוח את הקישור הזה ישירות בדפדפן לבדוק אם הוא עובד</strong>
-                    `;
+                    errorHelp = '<strong>🔍 הקובץ לא נמצא:</strong><br>• בדוק שהקובץ "' + CONFIG.excelFile + '" קיים ברפוזיטורי<br>• בדוק שהשם נכון<br>• בדוק שהקובץ בתיקיה הראשית';
                 } else if (error.message.includes('403')) {
-                    errorHelp = `
-                        <strong>🔒 אין הרשאה לגשת לקובץ:</strong><br>
-                        • בדוק שהרפוזיטורי ציבורי (Public)<br>
-                        • במידה והרפוזיטורי פרטי, הפוך אותו לציבורי ב-Settings → General → Danger Zone
-                    `;
-                } else if (error.message.includes('ריק') || error.message.includes('0 bytes')) {
-                    errorHelp = `
-                        <strong>📄 הקובץ ריק:</strong><br>
-                        • בדוק שהקובץ לא פגום<br>
-                        • נסה להעלות את הקובץ מחדש<br>
-                        • ודא שהקובץ מכיל נתונים
-                    `;
-                } else if (error.message.includes('נתונים') || error.message.includes('פורמט')) {
-                    errorHelp = `
-                        <strong>📋 בעיה בפורמט הקובץ:</strong><br>
-                        • ודא שהקובץ הוא Excel תקין (.xlsx)<br>
-                        • בדוק שיש כותרות בשורה הראשונה<br>
-                        • ודא שיש נתונים מתחת לכותרות
-                    `;
+                    errorHelp = '<strong>🔒 אין הרשאה:</strong><br>• בדוק שהרפוזיטורי ציבורי (Public)';
                 } else {
-                    errorHelp = `
-                        <strong>🔧 שגיאה כללית:</strong><br>
-                        • נסה לרענן את הדף<br>
-                        • בדוק את החיבור לאינטרנט<br>
-                        • נסה שוב בעוד כמה דקות
-                    `;
+                    errorHelp = '<strong>🔧 שגיאה כללית:</strong><br>• נסה לרענן את הדף<br>• בדוק חיבור לאינטרנט';
                 }
                 
-                addMessage(`
-                    <div class="error-message">
-                        <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
-                        <code>${error.message}</code><br><br>
-                        
-                        ${errorHelp}
-                        
-                        <br><strong>🔧 פרטים טכניים:</strong><br>
-                        <small style="opacity: 0.8;">
-                        רפוזיטורי: ${CONFIG.githubUser}/${CONFIG.githubRepo}<br>
-                        קובץ: ${CONFIG.excelFile}<br>
-                        בדוק את הקונסול (F12) לפרטים נוספים
-                        </small>
-                    </div>
-                `);
+                addMessage('<div class="error-message"><strong>❌ שגיאה בטעינת הנתונים:</strong><br>' + error.message + '<br><br>' + errorHelp + '</div>');
             }
         }
 
-        // Calculate similarity between two strings
-        function calculateSimilarity(str1, str2) {
-            if (str1.length === 0 || str2.length === 0) return 0;
-            
-            const longer = str1.length > str2.length ? str1 : str2;
-            const shorter = str1.length > str2.length ? str2 : str1;
-            
-            if (longer.length === 0) return 1;
-            
-            let matches = 0;
-            for (let i = 0; i < shorter.length; i++) {
-                if (longer.includes(shorter[i])) {
-                    matches++;
-                }
-            }
-            
-            return matches / longer.length;
-        }
-
-        // Platform-first search function with multi-word support
+        // Search functions
         function searchProducts(query) {
             if (!query.trim()) return [];
 
             const originalQuery = query.trim();
             const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
             
-            // Step 1: Search ONLY in Platform field first
+            // Step 1: Search in Platform field first
             const platformResults = productsData.map(product => {
                 const platformValue = String(product['פלטפורמה'] || '').toLowerCase();
                 const queryLower = originalQuery.toLowerCase();
@@ -778,66 +730,54 @@
                 let matches = [];
                 let matchedTermsCount = 0;
 
-                // Check for full query match in platform
                 if (platformValue === queryLower) {
                     score = 1000;
                     matches.push('פלטפורמה: התאמה מושלמת');
                     matchedTermsCount = searchTerms.length;
-                }
-                // Check if platform contains full query
-                else if (platformValue.includes(queryLower) && queryLower.length > 1) {
+                } else if (platformValue.includes(queryLower) && queryLower.length > 1) {
                     score = 800;
                     matches.push('פלטפורמה: מכיל את החיפוש המלא');
                     matchedTermsCount = searchTerms.length;
-                }
-                // Check if platform starts with query
-                else if (platformValue.startsWith(queryLower)) {
+                } else if (platformValue.startsWith(queryLower)) {
                     score = 700;
                     matches.push('פלטפורמה: מתחיל בחיפוש');
                     matchedTermsCount = searchTerms.length;
-                }
-                // Check individual terms in platform
-                else {
+                } else {
                     searchTerms.forEach(term => {
                         if (term.length < 2) return;
                         
                         if (platformValue === term) {
                             score += 600;
-                            matches.push(`פלטפורמה: התאמה מלאה למונח "${term}"`);
+                            matches.push('פלטפורמה: התאמה מלאה למונח "' + term + '"');
                             matchedTermsCount++;
-                        }
-                        else if (platformValue.includes(term)) {
+                        } else if (platformValue.includes(term)) {
                             score += 400;
-                            matches.push(`פלטפורמה: מכיל "${term}"`);
+                            matches.push('פלטפורמה: מכיל "' + term + '"');
                             matchedTermsCount++;
-                        }
-                        else if (platformValue.startsWith(term)) {
+                        } else if (platformValue.startsWith(term)) {
                             score += 500;
-                            matches.push(`פלטפורמה: מתחיל ב-"${term}"`);
+                            matches.push('פלטפורמה: מתחיל ב-"' + term + '"');
                             matchedTermsCount++;
                         }
                     });
                 }
 
-                // For multi-word queries, prioritize results that match ALL terms
                 if (searchTerms.length > 1) {
                     if (matchedTermsCount === searchTerms.length) {
-                        score += 1000; // Big bonus for matching all terms
+                        score += 1000;
                     } else if (matchedTermsCount > 0) {
-                        score += matchedTermsCount * 100; // Partial bonus based on matched terms
+                        score += matchedTermsCount * 100;
                     }
                 }
 
                 if (score > 0) {
-                    return { product, score, matches, searchLevel: 'platform', matchedTermsCount };
+                    return { product: product, score: score, matches: matches, searchLevel: 'platform', matchedTermsCount: matchedTermsCount };
                 }
                 return null;
             }).filter(item => item !== null);
 
-            // If found in platform, return the best (prioritizing those that match all terms)
             if (platformResults.length > 0) {
                 const bestResult = platformResults.sort((a, b) => {
-                    // First sort by matched terms count, then by score
                     if (a.matchedTermsCount !== b.matchedTermsCount) {
                         return b.matchedTermsCount - a.matchedTermsCount;
                     }
@@ -846,13 +786,13 @@
                 return [bestResult];
             }
 
-            // Step 2: Search in other fields with multi-word support
+            // Step 2: Search in other fields
             const generalResults = productsData.map(product => {
                 let score = 0;
                 let matches = [];
                 let highPriorityMatches = 0;
                 let totalMatchedTerms = 0;
-                const termMatches = new Set(); // Track which terms matched
+                const termMatches = new Set();
 
                 const searchFields = {
                     'מקט': { value: String(product['מקט'] || ''), priority: 10 },
@@ -866,26 +806,25 @@
                     'רוחב2': { value: String(product['רוחב2'] || ''), priority: 3 }
                 };
 
-                // First check for complete query match across all fields
+                // Check for complete query match
                 Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
                     const fieldStr = fieldData.value.toLowerCase();
                     const queryLower = originalQuery.toLowerCase();
                     
                     if (fieldStr === queryLower) {
                         score += fieldData.priority * 20;
-                        matches.push(`${fieldName}: התאמה מושלמת לכל החיפוש`);
+                        matches.push(fieldName + ': התאמה מושלמת לכל החיפוש');
                         highPriorityMatches++;
                         searchTerms.forEach(term => termMatches.add(term));
-                    }
-                    else if (fieldStr.includes(queryLower) && queryLower.length > 2) {
+                    } else if (fieldStr.includes(queryLower) && queryLower.length > 2) {
                         score += fieldData.priority * 15;
-                        matches.push(`${fieldName}: מכיל את כל החיפוש`);
+                        matches.push(fieldName + ': מכיל את כל החיפוש');
                         if (fieldData.priority >= 6) highPriorityMatches++;
                         searchTerms.forEach(term => termMatches.add(term));
                     }
                 });
 
-                // Then check individual terms
+                // Check individual terms
                 searchTerms.forEach(term => {
                     if (term.length < 2) return;
                     let termFoundInAnyField = false;
@@ -895,19 +834,17 @@
                         
                         if (fieldStr === term) {
                             score += fieldData.priority * 12;
-                            matches.push(`${fieldName}: התאמה מלאה ל-"${term}"`);
+                            matches.push(fieldName + ': התאמה מלאה ל-"' + term + '"');
                             if (fieldData.priority >= 6) highPriorityMatches++;
                             termFoundInAnyField = true;
-                        }
-                        else if (fieldStr.startsWith(term)) {
+                        } else if (fieldStr.startsWith(term)) {
                             score += fieldData.priority * 10;
-                            matches.push(`${fieldName}: מתחיל ב-"${term}"`);
+                            matches.push(fieldName + ': מתחיל ב-"' + term + '"');
                             if (fieldData.priority >= 6) highPriorityMatches++;
                             termFoundInAnyField = true;
-                        }
-                        else if (fieldStr.includes(term)) {
+                        } else if (fieldStr.includes(term)) {
                             score += fieldData.priority * 7;
-                            matches.push(`${fieldName}: מכיל "${term}"`);
+                            matches.push(fieldName + ': מכיל "' + term + '"');
                             termFoundInAnyField = true;
                         }
                     });
@@ -919,38 +856,34 @@
 
                 totalMatchedTerms = termMatches.size;
 
-                // Big bonus for matching all terms in multi-word queries
                 if (searchTerms.length > 1) {
                     if (totalMatchedTerms === searchTerms.length) {
-                        score += 1500; // Huge bonus for matching all terms
+                        score += 1500;
                         matches.unshift('🎯 מתאים לכל המילים בחיפוש');
                     } else if (totalMatchedTerms > 0) {
-                        score += totalMatchedTerms * 200; // Partial bonus
+                        score += totalMatchedTerms * 200;
                     }
                 }
 
-                // Additional bonuses
                 if (highPriorityMatches > 1) score += 300;
                 if (matches.length >= searchTerms.length) score += 200;
 
                 return { 
-                    product, 
-                    score, 
-                    matches, 
-                    highPriorityMatches, 
+                    product: product, 
+                    score: score, 
+                    matches: matches, 
+                    highPriorityMatches: highPriorityMatches, 
                     searchLevel: 'general',
                     matchedTermsCount: totalMatchedTerms
                 };
             })
             .filter(item => {
-                // For multi-word queries, only return items that match at least half the terms
                 if (searchTerms.length > 1) {
                     return item.matchedTermsCount >= Math.ceil(searchTerms.length / 2);
                 }
                 return item.score > 0;
-            }))
+            })
             .sort((a, b) => {
-                // First prioritize by matched terms count, then by high priority matches, then by score
                 if (a.matchedTermsCount !== b.matchedTermsCount) {
                     return b.matchedTermsCount - a.matchedTermsCount;
                 }
@@ -962,21 +895,15 @@
             .slice(0, 1);
 
             return generalResults;
-        })
-            .sort((a, b) => {
-                if (a.highPriorityMatches !== b.highPriorityMatches) {
-                    return b.highPriorityMatches - a.highPriorityMatches;
-                }
-                return b.score - a.score;
-            })
-            .slice(0, 1);
-
-            return generalResults;
         }
 
-        // Display product result with compact view
+        // Display product result
         function displayProductResult(item) {
-            const { product, score, matches, searchLevel } = item;
+            const product = item.product;
+            const score = item.score;
+            const matches = item.matches;
+            const searchLevel = item.searchLevel;
+            
             const confidence = searchLevel === 'platform' ? Math.min(100, Math.round((score / 10))) : Math.min(100, Math.round((score / 50) * 100));
             
             const productCode = product['מקט'] || 'לא זמין';
@@ -985,138 +912,76 @@
             const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
             const uniqueId = 'product-' + Date.now();
             
-            // Check if dimensions exist
             const hasDimensions1 = product['גובה'] && product['רוחב'];
             const hasDimensions2 = product['גובה2'] && product['רוחב2'];
             
-            let html = `
-                <div class="product-result" id="${uniqueId}">
-                    <!-- Compact View -->
-                    <div class="product-compact">
-                        <!-- Image -->
-                        <div class="product-image-compact">
-                            <div class="image-loading" id="img-${productCode}">
-                                ⏳ טוען תמונה...
-                            </div>
-                        </div>
-                        
-                        <!-- Info Table -->
-                        <div class="product-info-compact">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <h3 style="margin: 0; font-size: 18px;">מקט: ${productCode}</h3>
-                                <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">
-                                    ${confidence}% התאמה
-                                </span>
-                            </div>
-                            
-                            <table class="product-table">
-                                <tbody>
-                                    <tr${searchLevel === 'platform' ? ' class="highlight-row"' : ''}>
-                                        <th>פלטפורמה</th>
-                                        <td><strong>${product['פלטפורמה'] || 'לא זמין'}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <th>מתחם</th>
-                                        <td>${product['מתחם'] || 'לא זמין'}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>מחיר מכירה</th>
-                                        <td>${product['מחיר מכירה'] || 'לא זמין'}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>קמפיין</th>
-                                        <td>${product['קמפיין'] || 'לא זמין'}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            
-                            <div class="action-buttons-product">
-                                <button class="btn-expand" onclick="toggleProductDetails('${uniqueId}')">
-                                    📋 פרטים נוספים
-                                </button>
-                                <button class="btn-share" onclick="shareProduct('${uniqueId}', '${productCode}')">
-                                    📱 שתף בוואטסאפ
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Full Details (Hidden by default) -->
-                    <div class="product-details-full" id="${uniqueId}-details">
-                        <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px;">
-                            <strong>${searchMethod}</strong><br>
-                            <strong>סיבת ההתאמה:</strong> ${matches.slice(0, 2).join(', ')}
-                        </div>
-                        
-                        <h4 style="margin: 0 0 10px 0;">פרטים מלאים:</h4>
-                        <table class="product-table">
-                            <tbody>`;
+            let html = '<div class="product-result" id="' + uniqueId + '">';
+            html += '<div class="product-compact">';
+            html += '<div class="product-image-compact">';
+            html += '<div class="image-loading" id="img-' + productCode + '">⏳ טוען תמונה...</div>';
+            html += '</div>';
             
-            // Add visitors if exists
+            html += '<div class="product-info-compact">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">';
+            html += '<h3 style="margin: 0; font-size: 18px;">מקט: ' + productCode + '</h3>';
+            html += '<span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">';
+            html += confidence + '% התאמה</span></div>';
+            
+            html += '<table class="product-table"><tbody>';
+            html += '<tr' + (searchLevel === 'platform' ? ' class="highlight-row"' : '') + '>';
+            html += '<th>פלטפורמה</th><td><strong>' + (product['פלטפורמה'] || 'לא זמין') + '</strong></td></tr>';
+            html += '<tr><th>מתחם</th><td>' + (product['מתחם'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>מחיר מכירה</th><td>' + (product['מחיר מכירה'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>קמפיין</th><td>' + (product['קמפיין'] || 'לא זמין') + '</td></tr>';
+            html += '</tbody></table>';
+            
+            html += '<div class="action-buttons-product">';
+            html += '<button class="btn-expand" onclick="toggleProductDetails(\'' + uniqueId + '\')">📋 פרטים נוספים</button>';
+            html += '<button class="btn-share" onclick="shareProduct(\'' + uniqueId + '\', \'' + productCode + '\')">📱 שתף בוואטסאפ</button>';
+            html += '</div></div></div>';
+            
+            // Full Details section
+            html += '<div class="product-details-full" id="' + uniqueId + '-details">';
+            html += '<div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px;">';
+            html += '<strong>' + searchMethod + '</strong><br>';
+            html += '<strong>סיבת ההתאמה:</strong> ' + matches.slice(0, 2).join(', ') + '</div>';
+            
+            html += '<h4 style="margin: 0 0 10px 0;">פרטים מלאים:</h4>';
+            html += '<table class="product-table"><tbody>';
+            
             if (product['מבקרים']) {
-                html += `
-                                <tr>
-                                    <th>מבקרים</th>
-                                    <td>${product['מבקרים']}</td>
-                                </tr>`;
+                html += '<tr><th>מבקרים</th><td>' + product['מבקרים'] + '</td></tr>';
             }
             
-            // Add dimensions 1 if exists
             if (hasDimensions1) {
-                html += `
-                                <tr>
-                                    <th>גובה × רוחב</th>
-                                    <td>${product['גובה']} × ${product['רוחב']}</td>
-                                </tr>`;
+                html += '<tr><th>גובה × רוחב</th><td>' + product['גובה'] + ' × ' + product['רוחב'] + '</td></tr>';
             }
             
-            // Add dimensions 2 if exists  
             if (hasDimensions2) {
-                html += `
-                                <tr>
-                                    <th>גובה2 × רוחב2</th>
-                                    <td>${product['גובה2']} × ${product['רוחב2']}</td>
-                                </tr>`;
+                html += '<tr><th>גובה2 × רוחב2</th><td>' + product['גובה2'] + ' × ' + product['רוחב2'] + '</td></tr>';
             }
             
-            // If no additional details exist, show message
             if (!product['מבקרים'] && !hasDimensions1 && !hasDimensions2) {
-                html += `
-                                <tr>
-                                    <td colspan="2" style="text-align: center; opacity: 0.8; font-style: italic;">
-                                        אין פרטים נוספים זמינים
-                                    </td>
-                                </tr>`;
+                html += '<tr><td colspan="2" style="text-align: center; opacity: 0.8; font-style: italic;">אין פרטים נוספים זמינים</td></tr>';
             }
             
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            html += '</tbody></table></div></div>';
 
             addMessage(html);
 
-            // Try to load image
+            // Load image
             const img = new Image();
-            const imageContainer = document.getElementById(`img-${productCode}`);
+            const imageContainer = document.getElementById('img-' + productCode);
             
             img.onload = function() {
                 if (imageContainer) {
-                    imageContainer.innerHTML = `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}">`;
+                    imageContainer.innerHTML = '<img src="' + imageUrl + '" alt="תמונת מוצר ' + productCode + '">';
                 }
             };
             
             img.onerror = function() {
                 if (imageContainer) {
-                    imageContainer.innerHTML = `
-                        <div class="no-image-placeholder">
-                            <span style="font-size: 20px;">📷</span><br>
-                            <strong>אין תמונה</strong><br>
-                            <small>מקט: ${productCode}</small>
-                        </div>
-                    `;
+                    imageContainer.innerHTML = '<div class="no-image-placeholder"><span style="font-size: 20px;">📷</span><br><strong>אין תמונה</strong><br><small>מקט: ' + productCode + '</small></div>';
                 }
             };
             
@@ -1147,7 +1012,6 @@
             
             if (!table) return;
             
-            // Get all product data
             const rows = table.querySelectorAll('tr');
             let productText = '📦 *פרטי מוצר - מקט: ' + productCode + '*\n\n';
             
@@ -1161,7 +1025,6 @@
                 }
             });
             
-            // Add additional details if expanded
             const detailsSection = document.getElementById(productId + '-details');
             if (detailsSection && detailsSection.classList.contains('show')) {
                 const detailsTable = detailsSection.querySelector('.product-table');
@@ -1180,20 +1043,13 @@
                 }
             }
             
-            // Add image info
             const imageUrl = generateImageUrl(productCode);
             productText += '\n📷 *תמונה:* ' + imageUrl;
-            
-            // Add company signature
             productText += '\n\n---\n📡 נשלח ממערכת צ\'אט החברה';
             
-            // Create WhatsApp link
             const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
-            
-            // Open WhatsApp
             window.open(whatsappUrl, '_blank');
             
-            // Show confirmation
             addMessage('<strong>📱 שיתוף בוואטסאפ</strong><br>הנתונים של מקט ' + productCode + ' נשלחו לוואטסאפ!<br><small>אם הוואטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
         }
 
@@ -1207,15 +1063,7 @@
             const results = searchProducts(query);
             
             if (results.length === 0) {
-                addMessage(`<div class="error-message">
-                    <strong>🔍 לא נמצאו תוצאות</strong><br>
-                    לא נמצא מוצר התואם לחיפוש "<strong>${query}</strong>".<br><br>
-                    <strong>טיפים לחיפוש טוב יותר:</strong><br>
-                    • נסה להקליד שם פלטפורמה מדויק<br>
-                    • בדוק את האיות<br>
-                    • נסה מילים קצרות יותר<br>
-                    • נסה לחפש לפי מספר מקט
-                </div>`);
+                addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
             } else {
                 displayProductResult(results[0]);
             }
@@ -1231,10 +1079,10 @@
             }
         });
 
-        // Initialize - load data automatically
+        // Initialize
         window.addEventListener('load', function() {
             console.log('Page loaded, starting data load...');
-            setTimeout(() => {
+            setTimeout(function() {
                 loadExcelData();
             }, 1000);
         });
