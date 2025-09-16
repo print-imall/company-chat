@@ -595,26 +595,63 @@
             return CONFIG.imageBaseUrl + productCode + '.jpg';
         }
 
-        // Load Excel data from GitHub repository
+        // Load Excel data from GitHub repository with enhanced diagnostics
         async function loadExcelData() {
-            updateStatus('loading', 'טוען נתונים מ-GitHub...');
+            updateStatus('loading', 'מתחיל טעינה...');
             
             const githubUrl = `https://raw.githubusercontent.com/${CONFIG.githubUser}/${CONFIG.githubRepo}/main/${CONFIG.excelFile}`;
             
+            // Add detailed logging
+            console.log('=== LOADING DIAGNOSTICS ===');
+            console.log('Config:', CONFIG);
+            console.log('Attempting to load from:', githubUrl);
+            
             try {
-                console.log('Loading from:', githubUrl);
+                updateStatus('loading', 'מתחבר ל-GitHub...');
+                console.log('Starting fetch...');
                 
                 const response = await fetch(githubUrl);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.log('Error response text:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText.substring(0, 200)}...`);
                 }
                 
+                updateStatus('loading', 'מוריד קובץ...');
+                console.log('Getting arrayBuffer...');
+                
                 const arrayBuffer = await response.arrayBuffer();
+                console.log('ArrayBuffer size:', arrayBuffer.byteLength, 'bytes');
+                
+                if (arrayBuffer.byteLength === 0) {
+                    throw new Error('הקובץ שהתקבל ריק (0 bytes)');
+                }
+                
+                updateStatus('loading', 'מעבד קובץ Excel...');
+                console.log('Processing Excel file...');
+                
                 const data = new Uint8Array(arrayBuffer);
                 const workbook = XLSX.read(data, {type: 'array'});
+                console.log('Workbook sheets:', workbook.SheetNames);
+                
+                if (workbook.SheetNames.length === 0) {
+                    throw new Error('הקובץ לא מכיל גליונות עבודה');
+                }
+                
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                console.log('First sheet name:', workbook.SheetNames[0]);
+                
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                console.log('Parsed rows:', jsonData.length);
+                console.log('First row keys:', jsonData.length > 0 ? Object.keys(jsonData[0]) : 'No data');
+                console.log('Sample data:', jsonData.slice(0, 2));
+                
+                if (jsonData.length === 0) {
+                    throw new Error('הקובץ לא מכיל נתונים או שהפורמט לא נתמך');
+                }
                 
                 productsData = jsonData;
                 productCount.textContent = productsData.length;
@@ -629,25 +666,78 @@
                 searchInput.disabled = false;
                 searchBtn.disabled = false;
                 
-                // Show sample fields
+                // Show sample fields for debugging
                 if (productsData.length > 0) {
                     const sampleFields = Object.keys(productsData[0]).join(', ');
                     console.log('Available fields:', sampleFields);
+                    
+                    // Show fields in UI for debugging
+                    addMessage(`<strong>🔍 שדות זמינים בקובץ:</strong><br>
+                              <code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">${sampleFields}</code>`);
                 }
                 
-                console.log('Sample data:', productsData.slice(0, 2));
+                console.log('=== LOADING SUCCESS ===');
                 
             } catch (error) {
-                console.error('Error loading Excel:', error);
+                console.error('=== LOADING ERROR ===', error);
                 updateStatus('error', 'שגיאה בטעינה');
+                
+                // Determine error type and provide specific help
+                let errorHelp = '';
+                if (error.message.includes('404')) {
+                    errorHelp = `
+                        <strong>🔍 הקובץ לא נמצא:</strong><br>
+                        • בדוק שהקובץ "${CONFIG.excelFile}" קיים ברפוזיטורי<br>
+                        • בדוק שהשם נכון (כולל סיומת .xlsx)<br>
+                        • בדוק שהקובץ נמצא בתיקיה הראשית (לא בתת-תיקיה)<br><br>
+                        
+                        <strong>🔗 קישור שנבדק:</strong><br>
+                        <code style="word-break: break-all; font-size: 11px;">${githubUrl}</code><br><br>
+                        
+                        <strong>💡 נסה לפתוח את הקישור הזה ישירות בדפדפן לבדוק אם הוא עובד</strong>
+                    `;
+                } else if (error.message.includes('403')) {
+                    errorHelp = `
+                        <strong>🔒 אין הרשאה לגשת לקובץ:</strong><br>
+                        • בדוק שהרפוזיטורי ציבורי (Public)<br>
+                        • במידה והרפוזיטורי פרטי, הפוך אותו לציבורי ב-Settings → General → Danger Zone
+                    `;
+                } else if (error.message.includes('ריק') || error.message.includes('0 bytes')) {
+                    errorHelp = `
+                        <strong>📄 הקובץ ריק:</strong><br>
+                        • בדוק שהקובץ לא פגום<br>
+                        • נסה להעלות את הקובץ מחדש<br>
+                        • ודא שהקובץ מכיל נתונים
+                    `;
+                } else if (error.message.includes('נתונים') || error.message.includes('פורמט')) {
+                    errorHelp = `
+                        <strong>📋 בעיה בפורמט הקובץ:</strong><br>
+                        • ודא שהקובץ הוא Excel תקין (.xlsx)<br>
+                        • בדוק שיש כותרות בשורה הראשונה<br>
+                        • ודא שיש נתונים מתחת לכותרות
+                    `;
+                } else {
+                    errorHelp = `
+                        <strong>🔧 שגיאה כללית:</strong><br>
+                        • נסה לרענן את הדף<br>
+                        • בדוק את החיבור לאינטרנט<br>
+                        • נסה שוב בעוד כמה דקות
+                    `;
+                }
                 
                 addMessage(`
                     <div class="error-message">
                         <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
-                        ${error.message}<br><br>
+                        <code>${error.message}</code><br><br>
                         
-                        אנא בדוק שקובץ ה-Excel קיים ברפוזיטורי GitHub ושהרפוזיטורי ציבורי.<br>
-                        נסה לרענן את הדף או פנה למנהל המערכת.
+                        ${errorHelp}
+                        
+                        <br><strong>🔧 פרטים טכניים:</strong><br>
+                        <small style="opacity: 0.8;">
+                        רפוזיטורי: ${CONFIG.githubUser}/${CONFIG.githubRepo}<br>
+                        קובץ: ${CONFIG.excelFile}<br>
+                        בדוק את הקונסול (F12) לפרטים נוספים
+                        </small>
                     </div>
                 `);
             }
