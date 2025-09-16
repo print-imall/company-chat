@@ -1,4 +1,973 @@
-<!DOCTYPE html>
+<div style="margin-top:20px;">
+                        <h4 style="color:#333; text-align:center;">🏆 טופ מתחמים לפי מחיר ממוצע</h4>
+                        <canvas id="topMallsChart" style="max-height:300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateStatus(status, text) {
+            var statusIndicator = document.getElementById('statusIndicator');
+            if (!statusIndicator) return;
+            statusIndicator.className = 'status-indicator ' + status;
+            let icon = '⏳';
+            if (status === 'ready') icon = '✅';
+            else if (status === 'error') icon = '❌';
+            statusIndicator.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
+        }
+
+        const CONFIG = {
+            githubUser: 'print-imall',
+            githubRepo: 'company-chat',
+            excelFile: 'products.xlsx',
+            imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
+            imageFormat: 'direct'
+        };
+        
+        let productsData = [];
+        let selectedMalls = new Set();
+        let allMalls = [];
+        let savedSearches = JSON.parse(localStorage.getItem('companySearches') || '[]');
+        let currentSearchResults = [];
+        
+        const messagesArea = document.getElementById('messagesArea');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const statsCard = document.getElementById('statsCard');
+        const productCount = document.getElementById('productCount');
+
+        function clearHistory() {
+            const systemMessages = messagesArea.querySelectorAll('.message.system');
+            const firstSystemMessage = systemMessages[0];
+            messagesArea.innerHTML = '';
+            if (firstSystemMessage) { 
+                messagesArea.appendChild(firstSystemMessage);
+            }
+            addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
+        }
+
+        function addMessage(content, type) {
+            type = type || 'system';
+            const message = document.createElement('div');
+            message.className = 'message ' + type;
+            message.innerHTML = content;
+            messagesArea.appendChild(message);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function generateImageUrl(productCode) {
+            return CONFIG.imageBaseUrl + productCode + '.jpg';
+        }
+
+        async function loadExcelData() {
+            updateStatus('loading', 'מתחיל טעינה...');
+            const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
+            try {
+                updateStatus('loading', 'מתחבר ל-GitHub...');
+                const response = await fetch(githubUrl);
+                if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                updateStatus('loading', 'מוריד קובץ...');
+                const arrayBuffer = await response.arrayBuffer();
+                if (arrayBuffer.byteLength === 0) throw new Error('הקובץ שהתקבל ריק');
+                updateStatus('loading', 'מעבד קובץ Excel...');
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                if (workbook.SheetNames.length === 0) throw new Error('הקובץ לא מכיל גליונות עבודה');
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                if (jsonData.length === 0) throw new Error('הקובץ לא מכיל נתונים');
+                
+                productsData = jsonData;
+                productCount.textContent = productsData.length;
+                statsCard.style.display = 'block';
+                updateStatus('ready', 'מוכן! ' + productsData.length + ' מוצרים');
+                addMessage('<strong>📊 המערכת מוכנה לשימוש!</strong><br>נטענו בהצלחה <strong>' + productsData.length + ' מוצרים</strong> מהמאגר.<br><br><strong>🎉 אתה יכול עכשיו להתחיל לחפש מוצרים!</strong>');
+                searchInput.disabled = false;
+                searchBtn.disabled = false;
+                
+                if (productsData.length > 0) {
+                    const sampleFields = Object.keys(productsData[0]).join(', ');
+                    addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
+                }
+                
+                updateGanttMallOptions();
+                updateDashboard();
+                updateSavedSearchesDisplay();
+                
+            } catch (error) {
+                updateStatus('error', 'שגיאה בטעינה');
+                let errorHelp = '';
+                if (error.message.includes('404')) errorHelp = '<strong>🔍 הקובץ לא נמצא:</strong><br>• בדוק שהקובץ "' + CONFIG.excelFile + '" קיים ברפוזיטורי<br>• בדוק שהשם נכון<br>• בדוק שהקובץ בתיקיה הראשית';
+                else if (error.message.includes('403')) errorHelp = '<strong>🔒 אין הרשאה:</strong><br>• בדוק שהרפוזיטורי ציבורי (Public)';
+                else errorHelp = '<strong>🔧 שגיאה כללית:</strong><br>• נסה לרענן את הדף<br>• בדוק חיבור לאינטרנט';
+                addMessage('<div class="error-message"><strong>❌ שגיאה בטעינת הנתונים:</strong><br>' + error.message + '<br><br>' + errorHelp + '</div>');
+            }
+        }
+
+        function searchProducts(query) {
+            if (!query.trim()) return [];
+            const searchQuery = query.trim().toLowerCase();
+            
+            const platformResults = productsData.filter(product => {
+                const platform = String(product['פלטפורמה'] || '').toLowerCase();
+                return platform.includes(searchQuery);
+            });
+            
+            if (platformResults.length > 0) {
+                return platformResults.slice(0, 30).map(product => ({
+                    product,
+                    matchType: 'platform'
+                }));
+            }
+            
+            const searchTerms = searchQuery.split(/\s+/).filter(t => t.length > 0);
+            let scored = productsData.map(product => {
+                let score = 0;
+                Object.values(product).forEach(val => {
+                    if (!val) return;
+                    const fieldValue = String(val).toLowerCase();
+                    searchTerms.forEach(term => {
+                        if (fieldValue.includes(term)) {
+                            score += 1;
+                        }
+                    });
+                });
+                return { product, score };
+            }).filter(obj => obj.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 30);
+            
+            return scored.map(obj => ({
+                product: obj.product,
+                matchType: 'general'
+            }));
+        }
+
+        function displayAllProductResults(items) {
+            currentSearchResults = items;
+            if (items.length > 0) {
+                const matchType = items[0].matchType;
+                if (matchType === 'platform') {
+                    addMessage(`<strong>🎯 נמצאו ${items.length} תוצאות בפלטפורמה:</strong><br>התוצאות מוצגות לפי התאמה מדויקת בשדה "פלטפורמה".`);
+                } else {
+                    addMessage(`<strong>🔍 נמצאו ${items.length} תוצאות בחיפוש כללי:</strong><br>לא נמצאו התאמות בפלטפורמה, מוצגות תוצאות מכל השדות.`);
+                }
+                
+                addMessage(`
+                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <strong>📥 ייצא תוצאות חיפוש:</strong><br>
+                        <div class="export-buttons" style="margin-top: 10px;">
+                            <button class="export-btn excel" onclick="exportSearchResults('excel')">📊 Excel</button>
+                            <button class="export-btn csv" onclick="exportSearchResults('csv')">📋 CSV</button>
+                            <button class="export-btn json" onclick="exportSearchResults('json')">🔧 JSON</button>
+                        </div>
+                    </div>
+                `);
+            }
+            items.forEach(displayProductResult);
+        }
+
+        function displayProductResult(item) {
+            const product = item.product;
+            const productCode = product['מקט'] || 'לא זמין';
+            const imageUrl = generateImageUrl(productCode);
+            let html = '<div class="product-result">';
+            html += '<div class="product-compact">';
+            html += '<div class="product-image-compact">';
+            html += `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}" onerror="this.onerror=null;this.src='';this.alt='אין תמונה';" style="background:#fff" />`;
+            html += '</div>';
+            html += '<div class="product-info-compact">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+            html += '<h3 style="margin: 0; font-size: 21px;">מקט: ' + productCode + '</h3>';
+            html += '</div>';
+            html += '<div class="product-table-wrapper"><table class="product-table"><tbody>';
+            html += '<tr class="highlight-row"><th>פלטפורמה</th><td><strong>' + (product['פלטפורמה'] || 'לא זמין') + '</strong></td></tr>';
+            html += '<tr><th>מתחם</th><td>' + (product['מתחם'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>מחיר מכירה</th><td>' + (product['מחיר מכירה'] || 'לא זמין') + '</td></tr>';
+            html += '<tr><th>קמפיין</th><td>' + (product['קמפיין'] || 'לא זמין') + '</td></tr>';
+            html += `<tr><th>גובה</th><td>${product['גובה']||'-'}</td></tr>`;
+            html += `<tr><th>רוחב</th><td>${product['רוחב']||'-'}</td></tr>`;
+            html += '<tr><th>מספר מבקרים</th><td>' + (product['מבקרים'] || '-') + '</td></tr>';
+            html += '</tbody></table></div>';
+            html += '<div class="action-buttons-product">';
+            html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בווטסאפ</button>';
+            html += '</div></div></div></div>';
+            addMessage(html);
+        }
+
+        function shareProduct(productCode) {
+            const allMsgs = Array.from(messagesArea.querySelectorAll('.product-result'));
+            let prodDiv = null;
+            allMsgs.forEach(div => {
+                if (div.innerHTML.includes('מקט: ' + productCode)) prodDiv = div;
+            });
+            if (!prodDiv) return;
+            const table = prodDiv.querySelector('.product-table');
+            if (!table) return;
+            const rows = table.querySelectorAll('tr');
+            let productText = '📦 *פרטי מוצר - מק"ט: ' + productCode + '*\n\n';
+            rows.forEach(row => {
+                const th = row.querySelector('th');
+                const td = row.querySelector('td');
+                if (th && td) {
+                    const label = th.textContent.trim();
+                    const value = td.textContent.trim();
+                    productText += '*' + label + ':* ' + value + '\n';
+                }
+            });
+            const imageUrl = generateImageUrl(productCode);
+            productText += '\n📷 *תמונה:* ' + imageUrl;
+            productText += '\n\n—\n📡 נשלח ממערכת צ\'אט החברה';
+            const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
+            window.open(whatsappUrl, '_blank');
+            addMessage('<strong>📱 שיתוף בווטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לווטסאפ!<br><small>אם הווטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
+        }
+
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            addMessage(query, 'user');
+            const results = searchProducts(query);
+            if (results.length === 0) {
+                currentSearchResults = [];
+                addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
+            } else {
+                displayAllProductResults(results);
+            }
+            
+            document.getElementById('saveSearchBtn').disabled = results.length === 0;
+            searchInput.value = '';
+        }
+
+        // ייצוא נתונים
+        function exportToExcel() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(productsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'מוצרים');
+            
+            const stats = generateStatistics();
+            const statsWs = XLSX.utils.json_to_sheet([stats]);
+            XLSX.utils.book_append_sheet(wb, statsWs, 'סטטיסטיקות');
+            
+            XLSX.writeFile(wb, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.xlsx`);
+            addMessage('<strong>📊 ייצוא Excel הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function exportToCSV() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const csv = convertToCSV(productsData);
+            downloadFile(csv, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+            addMessage('<strong>📋 ייצוא CSV הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function exportToJSON() {
+            if (!productsData || productsData.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            
+            const data = {
+                exported_at: new Date().toISOString(),
+                total_products: productsData.length,
+                statistics: generateStatistics(),
+                products: productsData
+            };
+            
+            downloadFile(JSON.stringify(data, null, 2), `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+            addMessage('<strong>🔧 ייצוא JSON הושלם!</strong><br>הקובץ הורד למחשב שלך.');
+        }
+
+        function exportSearchResults(format) {
+            if (!currentSearchResults || currentSearchResults.length === 0) {
+                alert('אין תוצאות חיפוש לייצוא');
+                return;
+            }
+            
+            const searchData = currentSearchResults.map(item => item.product);
+            const searchQuery = document.getElementById('searchInput').value || 'חיפוש_אחרון';
+            
+            switch (format) {
+                case 'excel':
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(searchData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'תוצאות_חיפוש');
+                    XLSX.writeFile(wb, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    break;
+                    
+                case 'csv':
+                    const csv = convertToCSV(searchData);
+                    downloadFile(csv, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+                    break;
+                    
+                case 'json':
+                    const data = {
+                        search_query: searchQuery,
+                        exported_at: new Date().toISOString(),
+                        results_count: searchData.length,
+                        results: searchData
+                    };
+                    downloadFile(JSON.stringify(data, null, 2), `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+                    break;
+            }
+            
+            addMessage(`<strong>📥 ייצוא ${format.toUpperCase()} הושלם!</strong><br>תוצאות החיפוש יוצאו בהצלחה.`);
+        }
+
+        function convertToCSV(data) {
+            if (!data || data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.map(row => {
+                return headers.map(header => {
+                    const value = row[header] || '';
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                }).join(',');
+            });
+            
+            return [csvHeaders, ...csvRows].join('\n');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType + ';charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // שמירת חיפושים
+        function updateSavedSearchesDisplay() {
+            const container = document.getElementById('savedSearchesContainer');
+            const list = document.getElementById('savedSearchesList');
+            
+            if (savedSearches.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            list.innerHTML = savedSearches.map(search => `
+                <div class="saved-search-item">
+                    <div class="saved-search-text">
+                        <strong>"${search.text}"</strong><br>
+                        <small>${search.date} • ${search.results_count} תוצאות</small>
+                    </div>
+                    <div class="saved-search-actions">
+                        <button class="saved-search-btn search-btn-load" onclick="loadSavedSearch('${search.text}')">טען</button>
+                        <button class="saved-search-btn search-btn-delete" onclick="deleteSavedSearch(${search.id})">מחק</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadSavedSearch(searchText) {
+            document.getElementById('searchInput').value = searchText;
+            performSearch();
+        }
+
+        function deleteSavedSearch(searchId) {
+            savedSearches = savedSearches.filter(s => s.id !== searchId);
+            localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+            updateSavedSearchesDisplay();
+        }
+
+        // גאנט
+        function updateGanttMallOptions() {
+            if (!productsData || !Array.isArray(productsData) || productsData.length === 0) return;
+            
+            const allMallsSet = new Set();
+            productsData.forEach(p => {
+                const mall = p['מתחם'];
+                if (mall && mall.trim()) {
+                    allMallsSet.add(mall.trim());
+                }
+            });
+            
+            allMalls = Array.from(allMallsSet).sort();
+            updateMallsDropdown();
+        }
+
+        function updateMallsDropdown() {
+            const dropdown = document.getElementById('mallsDropdown');
+            if (!dropdown) return;
+            
+            dropdown.innerHTML = '';
+            
+            if (allMalls.length === 0) {
+                dropdown.innerHTML = '<div class="multi-select-option">אין מתחמים זמינים</div>';
+                return;
+            }
+            
+            const selectAllOption = document.createElement('div');
+            selectAllOption.className = 'multi-select-option';
+            selectAllOption.innerHTML = `
+                <input type="checkbox" id="selectAll" ${selectedMalls.size === allMalls.length ? 'checked' : ''}>
+                <label for="selectAll"><strong>בחר הכל</strong></label>
+            `;
+            selectAllOption.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const checkbox = this.querySelector('input');
+                if (checkbox.checked) {
+                    selectedMalls.clear();
+                } else {
+                    selectedMalls.clear();
+                    allMalls.forEach(mall => selectedMalls.add(mall));
+                }
+                updateMallsDisplay();
+                updateMallsDropdown();
+            });
+            dropdown.appendChild(selectAllOption);
+            
+            const separator = document.createElement('div');
+            separator.style.borderTop = '1px solid #e9ecef';
+            separator.style.margin = '5px 0';
+            dropdown.appendChild(separator);
+            
+            allMalls.forEach(mall => {
+                const option = document.createElement('div');
+                option.className = 'multi-select-option';
+                option.innerHTML = `
+                    <input type="checkbox" id="mall-${mall}" ${selectedMalls.has(mall) ? 'checked' : ''}>
+                    <label for="mall-${mall}">${mall}</label>
+                `;
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const checkbox = this.querySelector('input');
+                    if (checkbox.checked) {
+                        selectedMalls.delete(mall);
+                    } else {
+                        selectedMalls.add(mall);
+                    }
+                    updateMallsDisplay();
+                    updateMallsDropdown();
+                });
+                dropdown.appendChild(option);
+            });
+        }
+
+        function updateMallsDisplay() {
+            const selectedMallsDiv = document.getElementById('selectedMalls');
+            if (!selectedMallsDiv) return;
+            
+            if (selectedMalls.size === 0) {
+                selectedMallsDiv.innerHTML = '<span style="color:#999;">בחר מתחמים...</span>';
+            } else {
+                selectedMallsDiv.innerHTML = '';
+                Array.from(selectedMalls).forEach(mall => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    item.innerHTML = `
+                        ${mall}
+                        <span class="remove" onclick="removeMall('${mall}')">×</span>
+                    `;
+                    selectedMallsDiv.appendChild(item);
+                });
+            }
+        }
+
+        function removeMall(mall) {
+            selectedMalls.delete(mall);
+            updateMallsDisplay();
+            updateMallsDropdown();
+        }
+
+        function calculateGanttBudget() {
+            const type = document.getElementById('ganttType').value;
+            const budget = Number(document.getElementById('ganttBudget').value);
+            
+            if (selectedMalls.size === 0) {
+                document.getElementById('ganttResults').innerHTML = 
+                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ אנא בחר לפחות מתחם אחד</div>';
+                return;
+            }
+            
+            let mallSums = {};
+            let mallCounts = {};
+            
+            productsData.forEach(p => {
+                const mall = p['מתחם'];
+                if (!mall || !selectedMalls.has(mall.trim())) return;
+                
+                if (type === 'פרינט' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('פרינט'))) return;
+                if (type === 'דיגיטלי' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('דיגיטלי'))) return;
+                
+                let price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                if (isNaN(price)) price = 0;
+                
+                const mallKey = mall.trim();
+                if (!mallSums[mallKey]) {
+                    mallSums[mallKey] = 0;
+                    mallCounts[mallKey] = 0;
+                }
+                mallSums[mallKey] += price;
+                mallCounts[mallKey]++;
+            });
+            
+            const selectedMallsList = Array.from(selectedMalls);
+            
+            let finalMalls = selectedMallsList;
+            if (budget && !isNaN(budget) && budget > 0) {
+                let currentSum = 0;
+                finalMalls = [];
+                
+                const sortedMalls = selectedMallsList.sort((a, b) => (mallSums[a] || 0) - (mallSums[b] || 0));
+                
+                for (let mall of sortedMalls) {
+                    const mallCost = mallSums[mall] || 0;
+                    if (currentSum + mallCost <= budget) {
+                        currentSum += mallCost;
+                        finalMalls.push(mall);
+                    }
+                }
+            }
+            
+            if (finalMalls.length === 0) {
+                document.getElementById('ganttResults').innerHTML = 
+                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ לא נמצאו מתחמים תואמים לתקציב או לסוג הקמפיין</div>';
+                return;
+            }
+            
+            let html = `
+                <div style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <h4 style="text-align:center; color:#007bff; margin-top:0;">📊 תוצאות חישוב תקציב</h4>
+                    
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span><strong>סוג קמפיין:</strong></span>
+                            <span>${type === 'all' ? 'משולב (הכל)' : type}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span><strong>מתחמים נבחרים:</strong></span>
+                            <span>${selectedMalls.size}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span><strong>מתחמים בתקציב:</strong></span>
+                            <span>${finalMalls.length}</span>
+                        </div>
+                    </div>
+                    
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                        <thead>
+                            <tr style="background:#007bff; color:white;">
+                                <th style="padding:12px; text-align:right; border-radius:8px 0 0 0;">מתחם</th>
+                                <th style="padding:12px; text-align:center;">מוצרים</th>
+                                <th style="padding:12px; text-align:center; border-radius:0 8px 0 0;">עלות (₪)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            let totalCost = 0;
+            let totalProducts = 0;
+            const maxCost = Math.max(...finalMalls.map(mall => mallSums[mall] || 0));
+            
+            finalMalls.forEach((mall, index) => {
+                const cost = mallSums[mall] || 0;
+                const count = mallCounts[mall] || 0;
+                totalCost += cost;
+                totalProducts += count;
+                
+                const bgColor = index % 2 === 0 ? '#f8f9fa' : 'white';
+                html += `
+                    <tr style="background:${bgColor};">
+                        <td style="padding:10px; font-weight:500;">${mall}</td>
+                        <td style="padding:10px; text-align:center;">${count}</td>
+                        <td style="padding:10px; text-align:center; font-weight:600; color:#007bff;">${cost.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="background:#28a745; color:white; font-weight:bold;">
+                                <td style="padding:12px;">סה"כ</td>
+                                <td style="text-align:center; padding:12px;">${totalProducts}</td>
+                                <td style="text-align:center; padding:12px;">${totalCost.toLocaleString()}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+            `;
+            
+            html += '<div style="margin-top:20px;"><h5 style="color:#333; margin-bottom:15px;">📈 תצוגת גאנט חזותית:</h5>';
+            
+            finalMalls.forEach(mall => {
+                const cost = mallSums[mall] || 0;
+                const percentage = maxCost > 0 ? Math.max(8, Math.round((cost / maxCost) * 100)) : 8;
+                
+                html += `
+                    <div class="gantt-bar">
+                        <div class="gantt-bar-inner" style="width:${percentage}%; font-size:13px;">
+                            ${cost > 0 ? cost.toLocaleString() + ' ₪' : '-'}
+                        </div>
+                        <span class="gantt-bar-label">${mall}</span>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (budget && !isNaN(budget) && budget > 0) {
+                const remaining = budget - totalCost;
+                const usedPercentage = Math.round((totalCost / budget) * 100);
+                
+                html += `
+                    <div style="margin-top:20px; padding:15px; background:${remaining >= 0 ? '#d4edda' : '#f8d7da'}; border-radius:8px;">
+                        <h5 style="margin:0 0 10px 0; color:${remaining >= 0 ? '#155724' : '#721c24'};">💰 סטטוס תקציב</h5>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>תקציב מקסימלי:</span>
+                            <span><strong>${budget.toLocaleString()} ₪</strong></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>בשימוש:</span>
+                            <span><strong>${totalCost.toLocaleString()} ₪ (${usedPercentage}%)</strong></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>${remaining >= 0 ? 'נותר:' : 'חריגה:'}</span>
+                            <span style="font-weight:bold; color:${remaining >= 0 ? '#155724' : '#721c24'};">
+                                ${Math.abs(remaining).toLocaleString()} ₪
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('ganttResults').innerHTML = html;
+        }
+
+        function clearGanttForm() {
+            selectedMalls.clear();
+            updateMallsDisplay();
+            updateMallsDropdown();
+            
+            document.getElementById('ganttType').value = 'all';
+            document.getElementById('ganttBudget').value = '';
+            document.getElementById('ganttResults').innerHTML = '';
+            
+            const resultsDiv = document.getElementById('ganttResults');
+            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#28a745; font-weight:600;">✅ הטופס נוקה בהצלחה!</div>';
+            setTimeout(() => {
+                resultsDiv.innerHTML = '';
+            }, 2000);
+        }
+
+        // דשבורד
+        function generateStatistics() {
+            if (!productsData || productsData.length === 0) return {};
+            
+            const stats = {
+                total_products: productsData.length,
+                total_malls: new Set(productsData.map(p => p['מתחם']).filter(Boolean)).size,
+                total_platforms: new Set(productsData.map(p => p['פלטפורמה']).filter(Boolean)).size,
+                avg_price: 0,
+                min_price: 0,
+                max_price: 0,
+                total_visitors: 0
+            };
+            
+            const prices = productsData.map(p => {
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                return isNaN(price) ? 0 : price;
+            }).filter(p => p > 0);
+            
+            if (prices.length > 0) {
+                stats.avg_price = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+                stats.min_price = Math.min(...prices);
+                stats.max_price = Math.max(...prices);
+            }
+            
+            const visitors = productsData.map(p => {
+                const v = Number(String(p['מבקרים'] || '0').replace(/[^0-9]/g, ''));
+                return isNaN(v) ? 0 : v;
+            });
+            stats.total_visitors = visitors.reduce((a, b) => a + b, 0);
+            
+            return stats;
+        }
+
+        function updateDashboard() {
+            if (!productsData || productsData.length === 0) return;
+            
+            const stats = generateStatistics();
+            
+            document.getElementById('dashboardStats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_products.toLocaleString()}</div>
+                    <div class="stat-label">סה"כ מוצרים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_malls}</div>
+                    <div class="stat-label">מתחמים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_platforms}</div>
+                    <div class="stat-label">פלטפורמות</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.avg_price.toLocaleString()} ₪</div>
+                    <div class="stat-label">מחיר ממוצע</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.total_visitors.toLocaleString()}</div>
+                    <div class="stat-label">סה"כ מבקרים</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${stats.max_price.toLocaleString()} ₪</div>
+                    <div class="stat-label">מחיר מקסימלי</div>
+                </div>
+            `;
+            
+            createCharts();
+        }
+
+        function createCharts() {
+            createMallsChart();
+            createPricesChart();
+            createTopMallsChart();
+        }
+
+        function createMallsChart() {
+            const ctx = document.getElementById('mallsChart');
+            if (!ctx) return;
+            
+            const mallCounts = {};
+            productsData.forEach(p => {
+                const mall = p['מתחם'] || 'לא מוגדר';
+                mallCounts[mall] = (mallCounts[mall] || 0) + 1;
+            });
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(mallCounts),
+                    datasets: [{
+                        data: Object.values(mallCounts),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+                            '#4BC0C0', '#FF6384'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPricesChart() {
+            const ctx = document.getElementById('pricesChart');
+            if (!ctx) return;
+            
+            const prices = productsData.map(p => {
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                return isNaN(price) ? 0 : price;
+            }).filter(p => p > 0);
+            
+            const ranges = {
+                '0-1000': 0,
+                '1000-5000': 0,
+                '5000-10000': 0,
+                '10000-20000': 0,
+                '20000+': 0
+            };
+            
+            prices.forEach(price => {
+                if (price <= 1000) ranges['0-1000']++;
+                else if (price <= 5000) ranges['1000-5000']++;
+                else if (price <= 10000) ranges['5000-10000']++;
+                else if (price <= 20000) ranges['10000-20000']++;
+                else ranges['20000+']++;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ranges),
+                    datasets: [{
+                        label: 'מספר מוצרים',
+                        data: Object.values(ranges),
+                        backgroundColor: '#36A2EB'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTopMallsChart() {
+            const ctx = document.getElementById('topMallsChart');
+            if (!ctx) return;
+            
+            const mallStats = {};
+            
+            productsData.forEach(p => {
+                const mall = p['מתחם'] || 'לא מוגדר';
+                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
+                
+                if (!mallStats[mall]) {
+                    mallStats[mall] = { total: 0, count: 0 };
+                }
+                
+                if (!isNaN(price) && price > 0) {
+                    mallStats[mall].total += price;
+                    mallStats[mall].count++;
+                }
+            });
+            
+            const mallAvgs = Object.entries(mallStats)
+                .filter(([_, stats]) => stats.count > 0)
+                .map(([mall, stats]) => ({
+                    mall,
+                    avg: Math.round(stats.total / stats.count)
+                }))
+                .sort((a, b) => b.avg - a.avg)
+                .slice(0, 10);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: mallAvgs.map(item => item.mall),
+                    datasets: [{
+                        label: 'מחיר ממוצע (₪)',
+                        data: mallAvgs.map(item => item.avg),
+                        backgroundColor: '#FF6384'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // אירועי דף
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) { 
+            if (e.key === 'Enter') performSearch(); 
+        });
+        
+        document.getElementById('saveSearchBtn').addEventListener('click', function() {
+            const currentQuery = messagesArea.querySelector('.message.user:last-of-type')?.textContent.trim();
+            if (currentQuery) {
+                const searchObj = {
+                    id: Date.now(),
+                    text: currentQuery,
+                    date: new Date().toLocaleDateString('he-IL'),
+                    results_count: currentSearchResults.length
+                };
+                
+                savedSearches.unshift(searchObj);
+                if (savedSearches.length > 20) savedSearches.pop();
+                
+                localStorage.setItem('companySearches', JSON.stringify(savedSearches));
+                updateSavedSearchesDisplay();
+                addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${currentQuery}" נשמר בהצלחה.`);
+            }
+        });
+
+        document.getElementById('ganttCalcBtn').addEventListener('click', calculateGanttBudget);
+        document.getElementById('ganttClearBtn').addEventListener('click', clearGanttForm);
+
+        document.getElementById('mallsDisplay').addEventListener('click', function() {
+            const dropdown = document.getElementById('mallsDropdown');
+            const arrow = document.querySelector('.dropdown-arrow');
+            const isOpen = dropdown.style.display === 'block';
+            
+            if (isOpen) {
+                dropdown.style.display = 'none';
+                arrow.classList.remove('open');
+            } else {
+                dropdown.style.display = 'block';
+                arrow.classList.add('open');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.multi-select-container');
+            if (container && !container.contains(e.target)) {
+                document.getElementById('mallsDropdown').style.display = 'none';
+                document.querySelector('.dropdown-arrow').classList.remove('open');
+            }
+        });
+
+        // טיפול בטאבים
+        const tabSearch = document.getElementById('tabSearch');
+        const tabGantt = document.getElementById('tabGantt');
+        const tabDashboard = document.getElementById('tabDashboard');
+        const tabSearchPanel = document.getElementById('tabSearchPanel');
+        const tabGanttPanel = document.getElementById('tabGanttPanel');
+        const tabDashboardPanel = document.getElementById('tabDashboardPanel');
+
+        tabSearch.onclick = function() {
+            tabSearch.classList.add('active'); 
+            tabGantt.classList.remove('active');
+            tabDashboard.classList.remove('active');
+            tabSearchPanel.style.display = 'block'; 
+            tabGanttPanel.style.display = 'none';
+            tabDashboardPanel.style.display = 'none';
+        }
+
+        tabGantt.onclick = function() {
+            tabGantt.classList.add('active'); 
+            tabSearch.classList.remove('active');
+            tabDashboard.classList.remove('active');
+            tabGanttPanel.style.display = 'block'; 
+            tabSearchPanel.style.display = 'none';
+            tabDashboardPanel.style.display = 'none';
+        }
+
+        tabDashboard.onclick = function() {
+            tabDashboard.classList.add('active'); 
+            tabSearch.classList.remove('active');
+            tabGantt.classList.remove('active');
+            tabDashboardPanel.style.display = 'block'; 
+            tabSearchPanel.style.display = 'none';
+            tabGanttPanel.style.display = 'none';
+        }
+
+        // טעינת הנתונים בעת טעינת הדף
+        window.addEventListener('load', function() {
+            setTimeout(function() { 
+                loadExcelData(); 
+            }, 700);
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +975,7 @@
     <title>מערכת צ'אט החברה</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🢠</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -281,6 +1251,7 @@
             border-radius: 13px;
             margin-bottom: 12px;
         }
+        
         /* גאנט */
         .gantt-bar {
             margin:8px 0 2px 0;
@@ -301,120 +1272,9 @@
             align-items: center;
             justify-content: center;
         }
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-            flex-wrap: wrap;
-        }
-        .export-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .export-btn.excel {
-            background: linear-gradient(135deg, #217346, #0d5d2b);
-            color: white;
-        }
-        .export-btn.json {
-            background: linear-gradient(135deg, #fd7e14, #e55a00);
-            color: white;
-        }
-        .export-btn.csv {
-            background: linear-gradient(135deg, #6f42c1, #5a2d91);
-            color: white;
-        }
-        .export-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .dashboard-widget {
-            background: rgba(255,255,255,0.95);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-item {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid #007bff;
-        }
-        .stat-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: #007bff;
-            margin-bottom: 5px;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #6c757d;
-            font-weight: 500;
-        }
-        .chart-container {
-            height: 300px;
-            margin: 20px 0;
-            position: relative;
-        }
-        .saved-searches {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 10px;
-        }
-        .saved-search-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 10px;
-            margin: 5px 0;
-            background: #f8f9fa;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-        .saved-search-item:hover {
-            background: #e9ecef;
-        }
-        .saved-search-text {
-            flex: 1;
-            font-size: 14px;
-            color: #495057;
-        }
-        .saved-search-actions {
-            display: flex;
-            gap: 5px;
-        }
-        .saved-search-btn {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .search-btn-load {
-            background: #007bff;
-            color: white;
-        }
-        .search-btn-delete {
-            background: #dc3545;
-            color: white;
+        .gantt-bar-label {
+            font-size:15px;
+            color:#222;
         }
         .gantt-controls {
             background: rgba(255,255,255,0.95);
@@ -517,6 +1377,119 @@
             margin: 0;
             width: auto;
         }
+        
+        /* ייצוא ודשבורד */
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .export-btn.excel {
+            background: linear-gradient(135deg, #217346, #0d5d2b);
+            color: white;
+        }
+        .export-btn.json {
+            background: linear-gradient(135deg, #fd7e14, #e55a00);
+            color: white;
+        }
+        .export-btn.csv {
+            background: linear-gradient(135deg, #6f42c1, #5a2d91);
+            color: white;
+        }
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .dashboard-widget {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #007bff;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .saved-searches {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .saved-search-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .saved-search-item:hover {
+            background: #e9ecef;
+        }
+        .saved-search-text {
+            flex: 1;
+            font-size: 14px;
+            color: #495057;
+        }
+        .saved-search-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .saved-search-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .search-btn-load {
+            background: #007bff;
+            color: white;
+        }
+        .search-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
         @media (max-width: 900px) {
             .main-container { flex-direction: column; }
             .sidebar { width: 100%; min-width: unset; max-width: unset; padding:10px 0 0 0;}
@@ -579,6 +1552,8 @@
                 <button id="tabGantt" class="tab-btn">📊 גאנט תקציב</button>
                 <button id="tabDashboard" class="tab-btn">📈 דשבורד</button>
             </div>
+            
+            <!-- טאב חיפוש -->
             <div id="tabSearchPanel" class="tab-panel" style="display:block;">
                 <div class="messages-area" id="messagesArea">
                     <div class="message system">
@@ -615,6 +1590,8 @@
                     <div class="saved-searches" id="savedSearchesList"></div>
                 </div>
             </div>
+            
+            <!-- טאב גאנט -->
             <div id="tabGanttPanel" class="tab-panel" style="display:none;">
                 <div class="gantt-controls">
                     <h3 style="margin-top:0; color:#333; text-align:center;">📊 מחשבון תקציב גאנט</h3>
@@ -653,6 +1630,9 @@
                     
                     <div id="ganttResults"></div>
                 </div>
+            </div>
+            
+            <!-- טאב דשבורד -->
             <div id="tabDashboardPanel" class="tab-panel" style="display:none;">
                 <div class="dashboard-widget">
                     <h3 style="margin-top:0; color:#333; text-align:center;">📈 דשבורד נתונים</h3>
@@ -689,1047 +1669,4 @@
                     </div>
                     
                     <div style="margin-top:20px;">
-                        <h4 style="color:#333; text-align:center;">🏆 טופ מתחמים לפי מחיר ממוצע</h4>
-                        <canvas id="topMallsChart" style="max-height:300px;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- הוספת Chart.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-        function displayAllProductResults(items) {
-            currentSearchResults = items; // שמירת התוצאות הנוכחיות
-            if (items.length > 0) {
-                const matchType = items[0].matchType;
-                if (matchType === 'platform') {
-                    addMessage(`<strong>🎯 נמצאו ${items.length} תוצאות בפלטפורמה:</strong><br>התוצאות מוצגות לפי התאמה מדויקת בשדה "פלטפורמה".`);
-                } else {
-                    addMessage(`<strong>🔍 נמצאו ${items.length} תוצאות בחיפוש כללי:</strong><br>לא נמצאו התאמות בפלטפורמה, מוצגות תוצאות מכל השדות.`);
-                }
-                
-                // הוספת כפתורי ייצוא לתוצאות החיפוש
-                addMessage(`
-                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
-                        <strong>📥 ייצא תוצאות חיפוש:</strong><br>
-                        <div class="export-buttons" style="margin-top: 10px;">
-                            <button class="export-btn excel" onclick="exportSearchResults('excel')">📊 Excel</button>
-                            <button class="export-btn csv" onclick="exportSearchResults('csv')">📋 CSV</button>
-                            <button class="export-btn json" onclick="exportSearchResults('json')">🔧 JSON</button>
-                        </div>
-                    </div>
-                `);
-            }
-            items.forEach(displayProductResult);
-        }
-
-        // ייצוא תוצאות חיפוש ספציפיות
-        function exportSearchResults(format) {
-            if (!currentSearchResults || currentSearchResults.length === 0) {
-                alert('אין תוצאות חיפוש לייצוא');
-                return;
-            }
-            
-            const searchData = currentSearchResults.map(item => item.product);
-            const searchQuery = document.getElementById('searchInput').value || 'חיפוש_אחרון';
-            
-            switch (format) {
-                case 'excel':
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.json_to_sheet(searchData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'תוצאות_חיפוש');
-                    XLSX.writeFile(wb, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.xlsx`);
-                    break;
-                    
-                case 'csv':
-                    const csv = convertToCSV(searchData);
-                    downloadFile(csv, `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-                    break;
-                    
-                case 'json':
-                    const data = {
-                        search_query: searchQuery,
-                        exported_at: new Date().toISOString(),
-                        results_count: searchData.length,
-                        results: searchData
-                    };
-                    downloadFile(JSON.stringify(data, null, 2), `חיפוש_${searchQuery}_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
-                    break;
-            }
-            
-            addMessage(`<strong>📥 ייצוא ${format.toUpperCase()} הושלם!</strong><br>תוצאות החיפוש יוצאו בהצלחה.`);
-        } updateStatus(status, text) {
-            var statusIndicator = document.getElementById('statusIndicator');
-            if (!statusIndicator) return;
-            statusIndicator.className = 'status-indicator ' + status;
-            let icon = '⏳';
-            if (status === 'ready') icon = '✅';
-            else if (status === 'error') icon = '❌';
-            statusIndicator.innerHTML = '<span>' + icon + '</span><span>' + text + '</span>';
-        }
-
-        const CONFIG = {
-            githubUser: 'print-imall',
-            githubRepo: 'company-chat',
-            excelFile: 'products.xlsx',
-            imageBaseUrl: 'https://ce08731b-43c2-4f80-a021-ec2952b28cdc.netlify.app/',
-            imageFormat: 'direct'
-        };
-        let productsData = [];
-        const messagesArea = document.getElementById('messagesArea');
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const statsCard = document.getElementById('statsCard');
-        const productCount = document.getElementById('productCount');
-
-        // Multi-select functionality
-        let selectedMalls = new Set();
-        let allMalls = [];
-        let savedSearches = JSON.parse(localStorage.getItem('companySearches') || '[]');
-        let currentSearchResults = [];
-
-        // פונקציות ייצוא נתונים
-        function exportToExcel() {
-            if (!productsData || productsData.length === 0) {
-                alert('אין נתונים לייצוא');
-                return;
-            }
-            
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(productsData);
-            XLSX.utils.book_append_sheet(wb, ws, 'מוצרים');
-            
-            // הוספת גיליון עם סטטיסטיקות
-            const stats = generateStatistics();
-            const statsWs = XLSX.utils.json_to_sheet([stats]);
-            XLSX.utils.book_append_sheet(wb, statsWs, 'סטטיסטיקות');
-            
-            XLSX.writeFile(wb, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.xlsx`);
-            addMessage('<strong>📊 ייצוא Excel הושלם!</strong><br>הקובץ הורד למחשב שלך.');
-        }
-
-        function exportToCSV() {
-            if (!productsData || productsData.length === 0) {
-                alert('אין נתונים לייצוא');
-                return;
-            }
-            
-            const csv = convertToCSV(productsData);
-            downloadFile(csv, `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-            addMessage('<strong>📋 ייצוא CSV הושלם!</strong><br>הקובץ הורד למחשב שלך.');
-        }
-
-        function exportToJSON() {
-            if (!productsData || productsData.length === 0) {
-                alert('אין נתונים לייצוא');
-                return;
-            }
-            
-            const data = {
-                exported_at: new Date().toISOString(),
-                total_products: productsData.length,
-                statistics: generateStatistics(),
-                products: productsData
-            };
-            
-            downloadFile(JSON.stringify(data, null, 2), `נתוני_מוצרים_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
-            addMessage('<strong>🔧 ייצוא JSON הושלם!</strong><br>הקובץ הורד למחשב שלך.');
-        }
-
-        function convertToCSV(data) {
-            if (!data || data.length === 0) return '';
-            
-            const headers = Object.keys(data[0]);
-            const csvHeaders = headers.join(',');
-            
-            const csvRows = data.map(row => {
-                return headers.map(header => {
-                    const value = row[header] || '';
-                    // התמודדות עם פסיקים ומרכאות ב-CSV
-                    return `"${String(value).replace(/"/g, '""')}"`;
-                }).join(',');
-            });
-            
-            return [csvHeaders, ...csvRows].join('\n');
-        }
-
-        function downloadFile(content, filename, contentType) {
-            const blob = new Blob([content], { type: contentType + ';charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // פונקציות שמירת חיפושים
-        function saveCurrentSearch() {
-            const searchText = document.getElementById('searchInput').value.trim();
-            if (!searchText) {
-                alert('הכנס טקסט חיפוש לשמירה');
-                return;
-            }
-            
-            const searchObj = {
-                id: Date.now(),
-                text: searchText,
-                date: new Date().toLocaleDateString('he-IL'),
-                results_count: currentSearchResults.length
-            };
-            
-            savedSearches.unshift(searchObj);
-            if (savedSearches.length > 20) savedSearches.pop(); // שמירה של 20 חיפושים אחרונים
-            
-            localStorage.setItem('companySearches', JSON.stringify(savedSearches));
-            updateSavedSearchesDisplay();
-            addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${searchText}" נשמר בהצלחה.`);
-        }
-
-        function loadSavedSearch(searchText) {
-            document.getElementById('searchInput').value = searchText;
-            performSearch();
-        }
-
-        function deleteSavedSearch(searchId) {
-            savedSearches = savedSearches.filter(s => s.id !== searchId);
-            localStorage.setItem('companySearches', JSON.stringify(savedSearches));
-            updateSavedSearchesDisplay();
-        }
-
-        function updateSavedSearchesDisplay() {
-            const container = document.getElementById('savedSearchesContainer');
-            const list = document.getElementById('savedSearchesList');
-            
-            if (savedSearches.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
-            
-            container.style.display = 'block';
-            list.innerHTML = savedSearches.map(search => `
-                <div class="saved-search-item">
-                    <div class="saved-search-text">
-                        <strong>"${search.text}"</strong><br>
-                        <small>${search.date} • ${search.results_count} תוצאות</small>
-                    </div>
-                    <div class="saved-search-actions">
-                        <button class="saved-search-btn search-btn-load" onclick="loadSavedSearch('${search.text}')">טען</button>
-                        <button class="saved-search-btn search-btn-delete" onclick="deleteSavedSearch(${search.id})">מחק</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // פונקציות דשבורד וגרפים
-        function generateStatistics() {
-            if (!productsData || productsData.length === 0) return {};
-            
-            const stats = {
-                total_products: productsData.length,
-                total_malls: new Set(productsData.map(p => p['מתחם']).filter(Boolean)).size,
-                total_platforms: new Set(productsData.map(p => p['פלטפורמה']).filter(Boolean)).size,
-                avg_price: 0,
-                min_price: 0,
-                max_price: 0,
-                total_visitors: 0
-            };
-            
-            const prices = productsData.map(p => {
-                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
-                return isNaN(price) ? 0 : price;
-            }).filter(p => p > 0);
-            
-            if (prices.length > 0) {
-                stats.avg_price = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-                stats.min_price = Math.min(...prices);
-                stats.max_price = Math.max(...prices);
-            }
-            
-            const visitors = productsData.map(p => {
-                const v = Number(String(p['מבקרים'] || '0').replace(/[^0-9]/g, ''));
-                return isNaN(v) ? 0 : v;
-            });
-            stats.total_visitors = visitors.reduce((a, b) => a + b, 0);
-            
-            return stats;
-        }
-
-        function updateDashboard() {
-            if (!productsData || productsData.length === 0) return;
-            
-            const stats = generateStatistics();
-            
-            // עדכון סטטיסטיקות
-            document.getElementById('dashboardStats').innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-number">${stats.total_products.toLocaleString()}</div>
-                    <div class="stat-label">סה"כ מוצרים</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${stats.total_malls}</div>
-                    <div class="stat-label">מתחמים</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${stats.total_platforms}</div>
-                    <div class="stat-label">פלטפורמות</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${stats.avg_price.toLocaleString()} ₪</div>
-                    <div class="stat-label">מחיר ממוצע</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${stats.total_visitors.toLocaleString()}</div>
-                    <div class="stat-label">סה"כ מבקרים</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${stats.max_price.toLocaleString()} ₪</div>
-                    <div class="stat-label">מחיר מקסימלי</div>
-                </div>
-            `;
-            
-            createCharts();
-        }
-
-        function createCharts() {
-            createMallsChart();
-            createPricesChart();
-            createTopMallsChart();
-        }
-
-        function createMallsChart() {
-            const ctx = document.getElementById('mallsChart');
-            if (!ctx) return;
-            
-            const mallCounts = {};
-            productsData.forEach(p => {
-                const mall = p['מתחם'] || 'לא מוגדר';
-                mallCounts[mall] = (mallCounts[mall] || 0) + 1;
-            });
-            
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(mallCounts),
-                    datasets: [{
-                        data: Object.values(mallCounts),
-                        backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
-                            '#4BC0C0', '#FF6384'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        function createPricesChart() {
-            const ctx = document.getElementById('pricesChart');
-            if (!ctx) return;
-            
-            const prices = productsData.map(p => {
-                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
-                return isNaN(price) ? 0 : price;
-            }).filter(p => p > 0);
-            
-            // יצירת טווחי מחירים
-            const ranges = {
-                '0-1000': 0,
-                '1000-5000': 0,
-                '5000-10000': 0,
-                '10000-20000': 0,
-                '20000+': 0
-            };
-            
-            prices.forEach(price => {
-                if (price <= 1000) ranges['0-1000']++;
-                else if (price <= 5000) ranges['1000-5000']++;
-                else if (price <= 10000) ranges['5000-10000']++;
-                else if (price <= 20000) ranges['10000-20000']++;
-                else ranges['20000+']++;
-            });
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(ranges),
-                    datasets: [{
-                        label: 'מספר מוצרים',
-                        data: Object.values(ranges),
-                        backgroundColor: '#36A2EB'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function createTopMallsChart() {
-            const ctx = document.getElementById('topMallsChart');
-            if (!ctx) return;
-            
-            const mallStats = {};
-            
-            productsData.forEach(p => {
-                const mall = p['מתחם'] || 'לא מוגדר';
-                const price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
-                
-                if (!mallStats[mall]) {
-                    mallStats[mall] = { total: 0, count: 0 };
-                }
-                
-                if (!isNaN(price) && price > 0) {
-                    mallStats[mall].total += price;
-                    mallStats[mall].count++;
-                }
-            });
-            
-            const mallAvgs = Object.entries(mallStats)
-                .filter(([_, stats]) => stats.count > 0)
-                .map(([mall, stats]) => ({
-                    mall,
-                    avg: Math.round(stats.total / stats.count)
-                }))
-                .sort((a, b) => b.avg - a.avg)
-                .slice(0, 10);
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: mallAvgs.map(item => item.mall),
-                    datasets: [{
-                        label: 'מחיר ממוצע (₪)',
-                        data: mallAvgs.map(item => item.avg),
-                        backgroundColor: '#FF6384'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function clearHistory() {
-            const systemMessages = messagesArea.querySelectorAll('.message.system');
-            const firstSystemMessage = systemMessages[0];
-            messagesArea.innerHTML = '';
-            if (firstSystemMessage) { messagesArea.appendChild(firstSystemMessage);}
-            addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
-        }
-        function addMessage(content, type) {
-            type = type || 'system';
-            const message = document.createElement('div');
-            message.className = 'message ' + type;
-            message.innerHTML = content;
-            messagesArea.appendChild(message);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
-        }
-        function generateImageUrl(productCode) {
-            return CONFIG.imageBaseUrl + productCode + '.jpg';
-        }
-
-        async function loadExcelData() {
-            updateStatus('loading', 'מתחיל טעינה...');
-            const githubUrl = 'https://raw.githubusercontent.com/' + CONFIG.githubUser + '/' + CONFIG.githubRepo + '/main/' + CONFIG.excelFile;
-            try {
-                updateStatus('loading', 'מתחבר ל-GitHub...');
-                const response = await fetch(githubUrl);
-                if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-                updateStatus('loading', 'מוריד קובץ...');
-                const arrayBuffer = await response.arrayBuffer();
-                if (arrayBuffer.byteLength === 0) throw new Error('הקובץ שהתקבל ריק');
-                updateStatus('loading', 'מעבד קובץ Excel...');
-                const data = new Uint8Array(arrayBuffer);
-                const workbook = XLSX.read(data, {type: 'array'});
-                if (workbook.SheetNames.length === 0) throw new Error('הקובץ לא מכיל גליונות עבודה');
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                if (jsonData.length === 0) throw new Error('הקובץ לא מכיל נתונים');
-                productsData = jsonData;
-                productCount.textContent = productsData.length;
-                statsCard.style.display = 'block';
-                updateStatus('ready', 'מוכן! ' + productsData.length + ' מוצרים');
-                addMessage('<strong>📊 המערכת מוכנה לשימוש!</strong><br>נטענו בהצלחה <strong>' + productsData.length + ' מוצרים</strong> מהמאגר.<br><br><strong>🎉 אתה יכול עכשיו להתחיל לחפש מוצרים!</strong>');
-                searchInput.disabled = false;
-                searchBtn.disabled = false;
-                if (productsData.length > 0) {
-                    const sampleFields = Object.keys(productsData[0]).join(', ');
-                    addMessage('<strong>🔍 שדות זמינים בקובץ:</strong><br><code style="font-size: 12px; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; word-break: break-all;">' + sampleFields + '</code>');
-                }
-                
-                // עדכון רשימת המתחמים לטאב הגאנט
-                console.log('קורא לעדכון רשימת מתחמים...');
-                updateGanttMallOptions();
-                
-                // עדכון דשבורד
-                updateDashboard();
-                
-                // עדכון חיפושים שמורים
-                updateSavedSearchesDisplay();
-            } catch (error) {
-                updateStatus('error', 'שגיאה בטעינה');
-                let errorHelp = '';
-                if (error.message.includes('404')) errorHelp = '<strong>🔍 הקובץ לא נמצא:</strong><br>• בדוק שהקובץ "' + CONFIG.excelFile + '" קיים ברפוזיטורי<br>• בדוק שהשם נכון<br>• בדוק שהקובץ בתיקיה הראשית';
-                else if (error.message.includes('403')) errorHelp = '<strong>🔒 אין הרשאה:</strong><br>• בדוק שהרפוזיטורי ציבורי (Public)';
-                else errorHelp = '<strong>🔧 שגיאה כללית:</strong><br>• נסה לרענן את הדף<br>• בדוק חיבור לאינטרנט';
-                addMessage('<div class="error-message"><strong>❌ שגיאה בטעינת הנתונים:</strong><br>' + error.message + '<br><br>' + errorHelp + '</div>');
-            }
-        }
-
-        // שיפור אלגוריתם החיפוש - מתמקד בפלטפורמה ראשון
-        function searchProducts(query) {
-            if (!query.trim()) return [];
-            const searchQuery = query.trim().toLowerCase();
-            
-            // חיפוש ראשון - רק בעמודה "פלטפורמה"
-            const platformResults = productsData.filter(product => {
-                const platform = String(product['פלטפורמה'] || '').toLowerCase();
-                return platform.includes(searchQuery);
-            });
-            
-            // אם נמצאו תוצאות בפלטפורמה, מחזירים אותן (עד 30)
-            if (platformResults.length > 0) {
-                return platformResults.slice(0, 30).map(product => ({
-                    product,
-                    matchType: 'platform'
-                }));
-            }
-            
-            // אם לא נמצאו תוצאות בפלטפורמה, מחפשים בכל השדות
-            const searchTerms = searchQuery.split(/\s+/).filter(t => t.length > 0);
-            
-            let scored = productsData.map(product => {
-                let score = 0;
-                Object.values(product).forEach(val => {
-                    if (!val) return;
-                    const fieldValue = String(val).toLowerCase();
-                    searchTerms.forEach(term => {
-                        if (fieldValue.includes(term)) {
-                            score += 1;
-                        }
-                    });
-                });
-                return { product, score };
-            }).filter(obj => obj.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 30);
-            
-            return scored.map(obj => ({
-                product: obj.product,
-                matchType: 'general'
-            }));
-        }
-
-        function displayAllProductResults(items) {
-            if (items.length > 0) {
-                const matchType = items[0].matchType;
-                if (matchType === 'platform') {
-                    addMessage(`<strong>🎯 נמצאו ${items.length} תוצאות בפלטפורמה:</strong><br>התוצאות מוצגות לפי התאמה מדויקת בשדה "פלטפורמה".`);
-                } else {
-                    addMessage(`<strong>🔍 נמצאו ${items.length} תוצאות בחיפוש כללי:</strong><br>לא נמצאו התאמות בפלטפורמה, מוצגות תוצאות מכל השדות.`);
-                }
-            }
-            items.forEach(displayProductResult);
-        }
-
-                }
-
-        function displayProductResult(item) {
-            const product = item.product;
-            const productCode = product['מקט'] || 'לא זמין';
-            const imageUrl = generateImageUrl(productCode);
-            let html = '<div class="product-result">';
-            html += '<div class="product-compact">';
-            html += '<div class="product-image-compact">';
-            html += `<img src="${imageUrl}" alt="תמונת מוצר ${productCode}" onerror="this.onerror=null;this.src='';this.alt='אין תמונה';" style="background:#fff" />`;
-            html += '</div>';
-            html += '<div class="product-info-compact">';
-            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
-            html += '<h3 style="margin: 0; font-size: 21px;">מקט: ' + productCode + '</h3>';
-            html += '</div>';
-            html += '<div class="product-table-wrapper"><table class="product-table"><tbody>';
-            html += '<tr class="highlight-row"><th>פלטפורמה</th><td><strong>' + (product['פלטפורמה'] || 'לא זמין') + '</strong></td></tr>';
-            html += '<tr><th>מתחם</th><td>' + (product['מתחם'] || 'לא זמין') + '</td></tr>';
-            html += '<tr><th>מחיר מכירה</th><td>' + (product['מחיר מכירה'] || 'לא זמין') + '</td></tr>';
-            html += '<tr><th>קמפיין</th><td>' + (product['קמפיין'] || 'לא זמין') + '</td></tr>';
-            html += `<tr><th>גובה</th><td>${product['גובה']||'-'}</td></tr>`;
-            html += `<tr><th>רוחב</th><td>${product['רוחב']||'-'}</td></tr>`;
-            html += '<tr><th>מספר מבקרים</th><td>' + (product['מבקרים'] || '-') + '</td></tr>';
-            html += '</tbody></table></div>';
-            html += '<div class="action-buttons-product">';
-            html += '<button class="btn-share" onclick="shareProduct(\'' + productCode + '\')">📱 שתף בווטסאפ</button>';
-            html += '</div></div></div></div>';
-            addMessage(html);
-        }
-
-        function shareProduct(productCode) {
-            const allMsgs = Array.from(messagesArea.querySelectorAll('.product-result'));
-            let prodDiv = null;
-            allMsgs.forEach(div => {
-                if (div.innerHTML.includes('מקט: ' + productCode)) prodDiv = div;
-            });
-            if (!prodDiv) return;
-            const table = prodDiv.querySelector('.product-table');
-            if (!table) return;
-            const rows = table.querySelectorAll('tr');
-            let productText = '📦 *פרטי מוצר - מק"ט: ' + productCode + '*\n\n';
-            rows.forEach(row => {
-                const th = row.querySelector('th');
-                const td = row.querySelector('td');
-                if (th && td) {
-                    const label = th.textContent.trim();
-                    const value = td.textContent.trim();
-                    productText += '*' + label + ':* ' + value + '\n';
-                }
-            });
-            const imageUrl = generateImageUrl(productCode);
-            productText += '\n📷 *תמונה:* ' + imageUrl;
-            productText += '\n\n—\n📡 נשלח ממערכת צ\'אט החברה';
-            const whatsappUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(productText);
-            window.open(whatsappUrl, '_blank');
-            addMessage('<strong>📱 שיתוף בווטסאפ</strong><br>הנתונים של מק"ט ' + productCode + ' נשלחו לווטסאפ!<br><small>אם הווטסאפ לא נפתח, בדוק שיש לך את האפליקציה מותקנת.</small>');
-        }
-
-        function performSearch() {
-            const query = searchInput.value.trim();
-            if (!query) return;
-            addMessage(query, 'user');
-            const results = searchProducts(query);
-            if (results.length === 0) {
-                currentSearchResults = [];
-                addMessage('<div class="error-message"><strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "<strong>' + query + '</strong>".<br><br><strong>טיפים לחיפוש טוב יותר:</strong><br>• נסה להקליד שם פלטפורמה מדויק<br>• בדוק את האיות<br>• נסה מילים קצרות יותר<br>• נסה לחפש לפי מספר מקט</div>');
-            } else {
-                displayAllProductResults(results);
-            }
-            
-            // אפשור כפתור השמירה אחרי חיפוש מוצלח
-            document.getElementById('saveSearchBtn').disabled = results.length === 0;
-            searchInput.value = '';
-        }
-
-        searchBtn.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') performSearch(); });
-        
-        // אירוע שמירת חיפוש
-        document.getElementById('saveSearchBtn').addEventListener('click', function() {
-            // שמירת החיפוש הנוכחי במקום החיפוש הקודם
-            const currentQuery = messagesArea.querySelector('.message.user:last-of-type')?.textContent.trim();
-            if (currentQuery) {
-                const searchObj = {
-                    id: Date.now(),
-                    text: currentQuery,
-                    date: new Date().toLocaleDateString('he-IL'),
-                    results_count: currentSearchResults.length
-                };
-                
-                savedSearches.unshift(searchObj);
-                if (savedSearches.length > 20) savedSearches.pop();
-                
-                localStorage.setItem('companySearches', JSON.stringify(savedSearches));
-                updateSavedSearchesDisplay();
-                addMessage(`<strong>💾 החיפוש נשמר!</strong><br>החיפוש "${currentQuery}" נשמר בהצלחה.`);
-            }
-        });
-
-        // עדכון רשימת המתחמים עבור הגאנט
-        function updateGanttMallOptions() {
-            console.log('מעדכן רשימת מתחמים...', productsData.length);
-            if (!productsData || !Array.isArray(productsData) || productsData.length === 0) return;
-            
-            const allMallsSet = new Set();
-            productsData.forEach(p => {
-                const mall = p['מתחם'];
-                if (mall && mall.trim()) {
-                    allMallsSet.add(mall.trim());
-                }
-            });
-            
-            allMalls = Array.from(allMallsSet).sort();
-            console.log('נמצאו מתחמים:', allMalls);
-            updateMallsDropdown();
-        }
-
-        // יצירת רשימה נפתחת רב-בחירה למתחמים
-        function updateMallsDropdown() {
-            const dropdown = document.getElementById('mallsDropdown');
-            if (!dropdown) {
-                console.log('לא נמצא אלמנט mallsDropdown');
-                return;
-            }
-            
-            console.log('מעדכן רשימה נפתחת עם', allMalls.length, 'מתחמים');
-            dropdown.innerHTML = '';
-            
-            if (allMalls.length === 0) {
-                dropdown.innerHTML = '<div class="multi-select-option">אין מתחמים זמינים</div>';
-                return;
-            }
-            
-            // אפשרות "בחר הכל"
-            const selectAllOption = document.createElement('div');
-            selectAllOption.className = 'multi-select-option';
-            selectAllOption.innerHTML = `
-                <input type="checkbox" id="selectAll" ${selectedMalls.size === allMalls.length ? 'checked' : ''}>
-                <label for="selectAll"><strong>בחר הכל</strong></label>
-            `;
-            selectAllOption.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const checkbox = this.querySelector('input');
-                if (checkbox.checked) {
-                    selectedMalls.clear();
-                } else {
-                    selectedMalls.clear();
-                    allMalls.forEach(mall => selectedMalls.add(mall));
-                }
-                updateMallsDisplay();
-                updateMallsDropdown();
-            });
-            dropdown.appendChild(selectAllOption);
-            
-            // הוספת קו מפריד
-            const separator = document.createElement('div');
-            separator.style.borderTop = '1px solid #e9ecef';
-            separator.style.margin = '5px 0';
-            dropdown.appendChild(separator);
-            
-            // אפשרויות המתחמים
-            allMalls.forEach(mall => {
-                const option = document.createElement('div');
-                option.className = 'multi-select-option';
-                option.innerHTML = `
-                    <input type="checkbox" id="mall-${mall}" ${selectedMalls.has(mall) ? 'checked' : ''}>
-                    <label for="mall-${mall}">${mall}</label>
-                `;
-                option.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const checkbox = this.querySelector('input');
-                    if (checkbox.checked) {
-                        selectedMalls.delete(mall);
-                    } else {
-                        selectedMalls.add(mall);
-                    }
-                    updateMallsDisplay();
-                    updateMallsDropdown();
-                });
-                dropdown.appendChild(option);
-            });
-        }
-
-        function updateMallsDisplay() {
-            const selectedMallsDiv = document.getElementById('selectedMalls');
-            if (!selectedMallsDiv) return;
-            
-            if (selectedMalls.size === 0) {
-                selectedMallsDiv.innerHTML = '<span style="color:#999;">בחר מתחמים...</span>';
-            } else {
-                selectedMallsDiv.innerHTML = '';
-                Array.from(selectedMalls).forEach(mall => {
-                    const item = document.createElement('div');
-                    item.className = 'selected-item';
-                    item.innerHTML = `
-                        ${mall}
-                        <span class="remove" onclick="removeMall('${mall}')">×</span>
-                    `;
-                    selectedMallsDiv.appendChild(item);
-                });
-            }
-        }
-
-        function removeMall(mall) {
-            selectedMalls.delete(mall);
-            updateMallsDisplay();
-            updateMallsDropdown();
-        }
-
-        // טיפול בלחיצה על התצוגה של הרשימה הנפתחת
-        document.getElementById('mallsDisplay').addEventListener('click', function() {
-            const dropdown = document.getElementById('mallsDropdown');
-            const arrow = document.querySelector('.dropdown-arrow');
-            const isOpen = dropdown.style.display === 'block';
-            
-            if (isOpen) {
-                dropdown.style.display = 'none';
-                arrow.classList.remove('open');
-            } else {
-                dropdown.style.display = 'block';
-                arrow.classList.add('open');
-            }
-        });
-
-        // סגירת הרשימה הנפתחת כשלוחצים מחוץ לה
-        document.addEventListener('click', function(e) {
-            const container = document.querySelector('.multi-select-container');
-            if (!container.contains(e.target)) {
-                document.getElementById('mallsDropdown').style.display = 'none';
-                document.querySelector('.dropdown-arrow').classList.remove('open');
-            }
-        });
-
-        // חישוב תקציב גאנט משופר
-        function calculateGanttBudget() {
-            const type = document.getElementById('ganttType').value;
-            const budget = Number(document.getElementById('ganttBudget').value);
-            
-            if (selectedMalls.size === 0) {
-                document.getElementById('ganttResults').innerHTML = 
-                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ אנא בחר לפחות מתחם אחד</div>';
-                return;
-            }
-            
-            let mallSums = {};
-            let mallCounts = {};
-            
-            // חישוב סכומים לכל מתחם נבחר
-            productsData.forEach(p => {
-                const mall = p['מתחם'];
-                if (!mall || !selectedMalls.has(mall.trim())) return;
-                
-                // סינון לפי סוג קמפיין
-                if (type === 'פרינט' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('פרינט'))) return;
-                if (type === 'דיגיטלי' && (!p['פלטפורמה'] || !p['פלטפורמה'].includes('דיגיטלי'))) return;
-                
-                let price = Number(String(p['מחיר מכירה'] || '0').replace(/[^0-9.]/g, ''));
-                if (isNaN(price)) price = 0;
-                
-                const mallKey = mall.trim();
-                if (!mallSums[mallKey]) {
-                    mallSums[mallKey] = 0;
-                    mallCounts[mallKey] = 0;
-                }
-                mallSums[mallKey] += price;
-                mallCounts[mallKey]++;
-            });
-            
-            const selectedMallsList = Array.from(selectedMalls);
-            
-            // סינון לפי תקציב אם הוגדר
-            let finalMalls = selectedMallsList;
-            if (budget && !isNaN(budget) && budget > 0) {
-                let currentSum = 0;
-                finalMalls = [];
-                
-                // מיון לפי עלות (מהנמוך לגבוה)
-                const sortedMalls = selectedMallsList.sort((a, b) => (mallSums[a] || 0) - (mallSums[b] || 0));
-                
-                for (let mall of sortedMalls) {
-                    const mallCost = mallSums[mall] || 0;
-                    if (currentSum + mallCost <= budget) {
-                        currentSum += mallCost;
-                        finalMalls.push(mall);
-                    }
-                }
-            }
-            
-            if (finalMalls.length === 0) {
-                document.getElementById('ganttResults').innerHTML = 
-                    '<div style="color:#dc3545; font-weight:bold; text-align:center; padding:20px;">⚠️ לא נמצאו מתחמים תואמים לתקציב או לסוג הקמפיין</div>';
-                return;
-            }
-            
-            // יצירת טבלת תוצאות
-            let html = `
-                <div style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-                    <h4 style="text-align:center; color:#007bff; margin-top:0;">📊 תוצאות חישוב תקציב</h4>
-                    
-                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <span><strong>סוג קמפיין:</strong></span>
-                            <span>${type === 'all' ? 'משולב (הכל)' : type}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <span><strong>מתחמים נבחרים:</strong></span>
-                            <span>${selectedMalls.size}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span><strong>מתחמים בתקציב:</strong></span>
-                            <span>${finalMalls.length}</span>
-                        </div>
-                    </div>
-                    
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-                        <thead>
-                            <tr style="background:#007bff; color:white;">
-                                <th style="padding:12px; text-align:right; border-radius:8px 0 0 0;">מתחם</th>
-                                <th style="padding:12px; text-align:center;">מוצרים</th>
-                                <th style="padding:12px; text-align:center; border-radius:0 8px 0 0;">עלות (₪)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            let totalCost = 0;
-            let totalProducts = 0;
-            const maxCost = Math.max(...finalMalls.map(mall => mallSums[mall] || 0));
-            
-            finalMalls.forEach((mall, index) => {
-                const cost = mallSums[mall] || 0;
-                const count = mallCounts[mall] || 0;
-                totalCost += cost;
-                totalProducts += count;
-                
-                const bgColor = index % 2 === 0 ? '#f8f9fa' : 'white';
-                html += `
-                    <tr style="background:${bgColor};">
-                        <td style="padding:10px; font-weight:500;">${mall}</td>
-                        <td style="padding:10px; text-align:center;">${count}</td>
-                        <td style="padding:10px; text-align:center; font-weight:600; color:#007bff;">${cost.toLocaleString()}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                        <tfoot>
-                            <tr style="background:#28a745; color:white; font-weight:bold;">
-                                <td style="padding:12px;">סה"כ</td>
-                                <td style="text-align:center; padding:12px;">${totalProducts}</td>
-                                <td style="text-align:center; padding:12px;">${totalCost.toLocaleString()}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-            `;
-            
-            // הוספת גרף גאנט חזותי
-            html += '<div style="margin-top:20px;"><h5 style="color:#333; margin-bottom:15px;">📈 תצוגת גאנט חזותית:</h5>';
-            
-            finalMalls.forEach(mall => {
-                const cost = mallSums[mall] || 0;
-                const percentage = maxCost > 0 ? Math.max(8, Math.round((cost / maxCost) * 100)) : 8;
-                
-                html += `
-                    <div class="gantt-bar">
-                        <div class="gantt-bar-inner" style="width:${percentage}%; font-size:13px;">
-                            ${cost > 0 ? cost.toLocaleString() + ' ₪' : '-'}
-                        </div>
-                        <span class="gantt-bar-label">${mall}</span>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            
-            // תקציב נותר
-            if (budget && !isNaN(budget) && budget > 0) {
-                const remaining = budget - totalCost;
-                const usedPercentage = Math.round((totalCost / budget) * 100);
-                
-                html += `
-                    <div style="margin-top:20px; padding:15px; background:${remaining >= 0 ? '#d4edda' : '#f8d7da'}; border-radius:8px;">
-                        <h5 style="margin:0 0 10px 0; color:${remaining >= 0 ? '#155724' : '#721c24'};">💰 סטטוס תקציב</h5>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span>תקציב מקסימלי:</span>
-                            <span><strong>${budget.toLocaleString()} ₪</strong></span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span>בשימוש:</span>
-                            <span><strong>${totalCost.toLocaleString()} ₪ (${usedPercentage}%)</strong></span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span>${remaining >= 0 ? 'נותר:' : 'חריגה:'}</span>
-                            <span style="font-weight:bold; color:${remaining >= 0 ? '#155724' : '#721c24'};">
-                                ${Math.abs(remaining).toLocaleString()} ₪
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            document.getElementById('ganttResults').innerHTML = html;
-        }
-
-        document.getElementById('ganttCalcBtn').addEventListener('click', calculateGanttBudget);
-
-        // פונקציית ניקוי הגאנט
-        function clearGanttForm() {
-            // נקה בחירת מתחמים
-            selectedMalls.clear();
-            updateMallsDisplay();
-            updateMallsDropdown();
-            
-            // איפוס סוג קמפיין לברירת מחדל
-            document.getElementById('ganttType').value = 'all';
-            
-            // ניקוי תקציב
-            document.getElementById('ganttBudget').value = '';
-            
-            // ניקוי תוצאות
-            document.getElementById('ganttResults').innerHTML = '';
-            
-            // הודעה למשתמש
-            const resultsDiv = document.getElementById('ganttResults');
-            resultsDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#28a745; font-weight:600;">✅ הטופס נוקה בהצלחה!</div>';
-            setTimeout(() => {
-                resultsDiv.innerHTML = '';
-            }, 2000);
-        }
-
-        document.getElementById('ganttClearBtn').addEventListener('click', clearGanttForm);
-
-        // טיפול בטאבים
-        const tabSearch = document.getElementById('tabSearch');
-        const tabGantt = document.getElementById('tabGantt');
-        const tabDashboard = document.getElementById('tabDashboard');
-        const tabSearchPanel = document.getElementById('tabSearchPanel');
-        const tabGanttPanel = document.getElementById('tabGanttPanel');
-        const tabDashboardPanel = document.getElementById('tabDashboardPanel');
-
-        tabSearch.onclick = function() {
-            tabSearch.classList.add('active'); 
-            tabGantt.classList.remove('active');
-            tabDashboard.classList.remove('active');
-            tabSearchPanel.style.display = 'block'; 
-            tabGanttPanel.style.display = 'none';
-            tabDashboardPanel.style.display = 'none';
-        }
-
-        tabGantt.onclick = function() {
-            tabGantt.classList.add('active'); 
-            tabSearch.classList.remove('active');
-            tabDashboard.classList.remove('active');
-            tabGanttPanel.style.display = 'block'; 
-            tabSearchPanel.style.display = 'none';
-            tabDashboardPanel.style.display = 'none';
-        }
-
-        tabDashboard.onclick = function() {
-            tabDashboard.classList.add('active'); 
-            tabSearch.classList.remove('active');
-            tabGantt.classList.remove('active');
-            tabDashboardPanel.style.display = 'block'; 
-            tabSearchPanel.style.display = 'none';
-            tabGanttPanel.style.display = 'none';
-        }
-
-        // טעינת הנתונים בעת טעינת הדף
-        window.addEventListener('load', function() {
-            setTimeout(function() { 
-                loadExcelData(); 
-            }, 700);
-        });
-    </script>
-</body>
-</html>
+                        <h4 style="color:#333; text-align
