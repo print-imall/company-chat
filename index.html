@@ -21,92 +21,224 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 20px;
+            padding: 25px;
             text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
             color: white;
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .status-indicator {
-            display: inline-block;
-            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
             background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+            border-radius: 25px;
             color: white;
             font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .status-indicator.loading {
-            background: rgba(255, 193, 7, 0.3);
-            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #ffc107, #ff8f00);
+            animation: pulse 2s infinite;
         }
 
         .status-indicator.ready {
-            background: rgba(40, 167, 69, 0.3);
+            background: linear-gradient(135deg, #28a745, #20c997);
         }
 
         .status-indicator.error {
-            background: rgba(220, 53, 69, 0.3);
+            background: linear-gradient(135deg, #dc3545, #c82333);
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
 
-        .chat-container {
+        .main-container {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
             padding: 20px;
+            gap: 20px;
         }
 
-        .config-section {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
+        .sidebar {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .config-card h3 {
+            color: white;
+            font-size: 18px;
             margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-group {
+            margin-bottom: 20px;
+        }
+
+        .config-label {
+            display: block;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .config-input, .config-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .config-input:focus, .config-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+
+        .config-hint {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
             color: white;
         }
 
-        .config-input {
-            width: 100%;
-            padding: 10px;
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            margin-top: 5px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
         .messages-area {
             flex: 1;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            border-radius: 20px;
             margin-bottom: 20px;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
             min-height: 400px;
             max-height: 60vh;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .message {
-            margin-bottom: 15px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            max-width: 80%;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            max-width: 85%;
             word-wrap: break-word;
+            position: relative;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.user {
@@ -114,101 +246,137 @@
             color: white;
             margin-left: auto;
             text-align: right;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         }
 
         .message.system {
             background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            border: 1px solid #e9ecef;
             color: #495057;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .product-result {
             background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 15px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .product-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
+            gap: 15px;
         }
 
         .product-code {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 700;
             background: rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
         }
 
         .confidence-score {
             background: rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .match-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
         }
 
         .product-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .detail-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-2px);
         }
 
         .detail-label {
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 8px;
             opacity: 0.9;
+            font-size: 13px;
         }
 
         .detail-value {
             font-size: 16px;
+            font-weight: 500;
+        }
+
+        .detail-item.highlight {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4);
         }
 
         .product-image {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .product-image img {
             max-width: 100%;
             max-height: 300px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .product-image img:hover {
+            transform: scale(1.05);
         }
 
         .image-loading {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
+            backdrop-filter: blur(10px);
             animation: pulse 1.5s infinite;
         }
 
         .input-area {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .search-input {
             flex: 1;
-            padding: 15px;
+            padding: 16px 20px;
             border: 2px solid #e9ecef;
             border-radius: 25px;
             font-size: 16px;
@@ -218,24 +386,27 @@
 
         .search-input:focus {
             border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
         }
 
         .search-btn {
-            padding: 15px 30px;
+            padding: 16px 30px;
             background: linear-gradient(135deg, #007bff, #0056b3);
             color: white;
             border: none;
             border-radius: 25px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .search-btn:hover {
+        .search-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
         }
 
         .search-btn:disabled {
@@ -244,39 +415,107 @@
             transform: none;
         }
 
-        .stats-bar {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+        .clear-btn {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #6c757d, #495057);
             color: white;
-            text-align: center;
+            border: none;
+            border-radius: 25px;
             font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
         }
 
         .error-message {
-            background: rgba(220, 53, 69, 0.2);
-            border: 1px solid rgba(220, 53, 69, 0.5);
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border: none;
             color: white;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 15px;
             margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .no-image-placeholder {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .sidebar > * {
+                min-width: 300px;
+            }
         }
 
         @media (max-width: 768px) {
+            .sidebar {
+                flex-direction: column;
+            }
+            
+            .sidebar > * {
+                min-width: auto;
+            }
+            
             .product-details {
                 grid-template-columns: 1fr;
             }
             
             .product-header {
                 flex-direction: column;
-                gap: 10px;
                 text-align: center;
             }
             
             .input-area {
                 flex-direction: column;
             }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .messages-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb {
+            background: rgba(0, 123, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 123, 255, 0.5);
         }
     </style>
 </head>
@@ -284,112 +523,119 @@
     <div class="header">
         <h1>🏢 מערכת צ'אט החברה</h1>
         <div class="status-indicator loading" id="statusIndicator">
-            ⏳ טוען נתונים מ-GitHub...
+            <span>⏳</span>
+            <span>טוען נתונים מ-GitHub...</span>
         </div>
     </div>
 
-    <div class="chat-container">
-        <!-- Configuration Section -->
-        <div class="config-section">
-            <h3>⚙️ הגדרות מערכת</h3>
-            
-            <label>📁 קישור GitHub לקובץ Excel:</label>
-            <input type="text" id="githubFileUrl" class="config-input" 
-                   placeholder="https://github.com/username/repo/blob/main/products.xlsx"
-                   value="">
-            
-            <small style="display: block; margin-top: 5px; opacity: 0.8;">
-                העתק את הקישור המלא לקובץ ה-Excel מ-GitHub (כולל /blob/main/)
-            </small>
-            
-            <br><br>
-            
-            <label>📁 או שם קובץ ה-Excel:</label>
-            <input type="text" id="excelFileName" class="config-input" 
-                   placeholder="products.xlsx"
-                   value="products.xlsx">
-            
-            <br><br>
-            
-            <label>👤 שם משתמש GitHub:</label>
-            <input type="text" id="githubUsername" class="config-input" 
-                   placeholder="print-imall"
-                   value="print-imall">
-            
-            <br><br>
-            
-            <label>📦 שם רפוזיטורי:</label>
-            <input type="text" id="githubRepo" class="config-input" 
-                   placeholder="company-chat"
-                   value="company-chat">
-            
-            <br><br>
-            
-            <label>📷 כתובת בסיס לתמונות:</label>
-            <input type="text" id="dropboxUrl" class="config-input" 
-                   placeholder="https://dl.dropboxusercontent.com/s/your-folder/ או https://raw.githubusercontent.com/username/repo/main/images/">
-            
-            <small style="display: block; margin-top: 5px; opacity: 0.8;">
-                אפשרויות:<br>
-                • Dropbox: https://dl.dropboxusercontent.com/s/your-folder/<br>
-                • GitHub: https://raw.githubusercontent.com/username/repo/main/images/<br>
-                • כתובת אחרת: http://your-domain.com/images/
-            </small>
-            
-            <br><br>
-            
-            <label>🏷️ פורמט שם תמונה:</label>
-            <select id="imageNameFormat" class="config-input">
-                <option value="direct">[מקט].jpg - לדוגמה: 12345.jpg</option>
-                <option value="prefix">product-[מקט].jpg - לדוגמה: product-12345.jpg</option>
-                <option value="custom">פורמט מותאם אישית</option>
-            </select>
-            
-            <br><br>
-            
-            <div id="customFormatDiv" style="display: none;">
-                <label>פורמט מותאם (השתמש ב-{מקט} כמשתנה):</label>
-                <input type="text" id="customImageFormat" class="config-input" 
-                       placeholder="img_{מקט}.png">
+    <div class="main-container">
+        <!-- Sidebar with Configuration -->
+        <div class="sidebar">
+            <!-- GitHub Configuration -->
+            <div class="config-card">
+                <h3>📁 הגדרות קבצים</h3>
+                
+                <div class="config-group">
+                    <label class="config-label">קישור GitHub לקובץ Excel:</label>
+                    <input type="text" id="githubFileUrl" class="config-input" 
+                           placeholder="https://github.com/username/repo/blob/main/products.xlsx">
+                    <div class="config-hint">העתק את הקישור המלא לקובץ ה-Excel מ-GitHub</div>
+                </div>
+
+                <div class="config-group">
+                    <label class="config-label">שם משתמש GitHub:</label>
+                    <input type="text" id="githubUsername" class="config-input" 
+                           placeholder="print-imall" value="print-imall">
+                </div>
+
+                <div class="config-group">
+                    <label class="config-label">שם רפוזיטורי:</label>
+                    <input type="text" id="githubRepo" class="config-input" 
+                           placeholder="company-chat" value="company-chat">
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="loadExcelData()" class="btn btn-primary">
+                        <span>🔄</span>
+                        <span>טען מחדש</span>
+                    </button>
+                </div>
             </div>
-            
-            <br>
-            
-            <button onclick="loadExcelData()" id="reloadBtn" 
-                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-                🔄 טען מחדש
-            </button>
-            
-            <button onclick="testImageUrl()" id="testImageBtn" 
-                    style="background: rgba(0,123,255,0.3); color: white; border: 1px solid rgba(0,123,255,0.5); padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                🧪 בדוק תמונה לדוגמה
-            </button>
-        </div>
 
-        <!-- Stats Bar -->
-        <div class="stats-bar" id="statsBar" style="display: none;">
-            📊 מאגר הנתונים מכיל <strong id="productCount">0</strong> מוצרים
-        </div>
+            <!-- Images Configuration -->
+            <div class="config-card">
+                <h3>📷 הגדרות תמונות</h3>
+                
+                <div class="config-group">
+                    <label class="config-label">כתובת בסיס לתמונות:</label>
+                    <input type="text" id="dropboxUrl" class="config-input" 
+                           placeholder="https://raw.githubusercontent.com/username/repo/main/">
+                    <div class="config-hint">GitHub, Dropbox, או כתובת אחרת</div>
+                </div>
 
-        <!-- Messages Area -->
-        <div class="messages-area" id="messagesArea">
-            <div class="message system">
-                <strong>🤖 מערכת צ'אט מוכנה!</strong><br>
-                המערכת תטען אוטומטית את נתוני המוצרים מקובץ ה-Excel שבתיקיית GitHub.
-                <br><br>
-                <strong>הוראות:</strong>
-                <br>1. ודא שקובץ ה-Excel נמצא בתיקייה הראשית של הרפוזיטורי
-                <br>2. הגדר את כתובת Dropbox לתמונות (אופציונלי)
-                <br>3. התחל לחפש מוצרים!
+                <div class="config-group">
+                    <label class="config-label">פורמט שם תמונה:</label>
+                    <select id="imageNameFormat" class="config-select">
+                        <option value="direct">[מקט].jpg - לדוגמה: 12345.jpg</option>
+                        <option value="prefix">product-[מקט].jpg</option>
+                        <option value="custom">פורמט מותאם אישית</option>
+                    </select>
+                </div>
+
+                <div class="config-group" id="customFormatDiv" style="display: none;">
+                    <label class="config-label">פורמט מותאם:</label>
+                    <input type="text" id="customImageFormat" class="config-input" 
+                           placeholder="img_{מקט}.png">
+                    <div class="config-hint">השתמש ב-{מקט} כמשתנה</div>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="testImageUrl()" class="btn btn-secondary">
+                        <span>🧪</span>
+                        <span>בדוק תמונה</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-card" id="statsCard" style="display: none;">
+                <div class="stats-number" id="productCount">0</div>
+                <div class="stats-label">מוצרים במאגר</div>
             </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="input-area">
-            <input type="text" id="searchInput" class="search-input" 
-                   placeholder="חפש מוצר (מקט, מתחם, פלטפורמה...)" 
-                   disabled>
-            <button id="searchBtn" class="search-btn" disabled>🔍 חפש</button>
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Messages Area -->
+            <div class="messages-area" id="messagesArea">
+                <div class="message system">
+                    <strong>🤖 ברוכים הבאים למערכת צ'אט החברה!</strong><br><br>
+                    <strong>מה המערכת עושה:</strong><br>
+                    • טוענת אוטומטית את נתוני המוצרים מ-GitHub<br>
+                    • מאפשרת חיפוש מתקדם עם עדיפות לפלטפורמה<br>
+                    • מציגה תמונות של המוצרים<br><br>
+                    
+                    <strong>איך להתחיל:</strong><br>
+                    1. הגדר את פרטי ה-GitHub בצד שמאל<br>
+                    2. (אופציונלי) הגדר כתובת תמונות<br>
+                    3. התחל לחפש מוצרים!
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <input type="text" id="searchInput" class="search-input" 
+                       placeholder="חפש מוצר (פלטפורמה, מקט, מתחם...)" 
+                       disabled>
+                <button id="searchBtn" class="search-btn" disabled>
+                    <span>🔍</span>
+                    <span>חפש</span>
+                </button>
+                <button id="clearBtn" class="clear-btn" onclick="clearHistory()">
+                    <span>🗑️</span>
+                    <span>נקה</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -403,15 +649,37 @@
         const messagesArea = document.getElementById('messagesArea');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
         const dropboxUrlInput = document.getElementById('dropboxUrl');
         const excelFileNameInput = document.getElementById('excelFileName');
-        const statsBar = document.getElementById('statsBar');
+        const statsCard = document.getElementById('statsCard');
         const productCount = document.getElementById('productCount');
 
         // Update status indicator
         function updateStatus(status, text) {
-            statusIndicator.className = `status-indicator ${status}`;
-            statusIndicator.textContent = text;
+            const statusEl = document.getElementById('statusIndicator');
+            statusEl.className = `status-indicator ${status}`;
+            
+            let icon = '⏳';
+            if (status === 'ready') icon = '✅';
+            else if (status === 'error') icon = '❌';
+            
+            statusEl.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+        }
+
+        // Clear chat history
+        function clearHistory() {
+            const systemMessages = messagesArea.querySelectorAll('.message.system');
+            const firstSystemMessage = systemMessages[0];
+            
+            // Keep only the first system message
+            messagesArea.innerHTML = '';
+            if (firstSystemMessage) {
+                messagesArea.appendChild(firstSystemMessage);
+            }
+            
+            // Add confirmation message
+            addMessage('<strong>🗑️ ההיסטוריה נוקתה!</strong><br>כל חיפושי העבר נמחקו.');
         }
 
         // Add message to chat
@@ -421,141 +689,6 @@
             message.innerHTML = content;
             messagesArea.appendChild(message);
             messagesArea.scrollTop = messagesArea.scrollHeight;
-        }
-
-        // Get current repository info from URL
-        function getRepoInfo() {
-            const currentUrl = window.location.href;
-            
-            // If running on GitHub Pages
-            if (currentUrl.includes('github.io')) {
-                const parts = currentUrl.split('/');
-                const username = parts[2].replace('.github.io', '');
-                const repoName = parts[3] || username;
-                return { username, repoName };
-            }
-            
-            // If running locally or other domain, use manual input
-            return { 
-                username: '', 
-                repoName: '' 
-            };
-        }
-
-        // Convert GitHub blob URL to raw URL
-        function convertToRawUrl(githubUrl) {
-            if (githubUrl.includes('github.com') && githubUrl.includes('/blob/')) {
-                return githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            }
-            return githubUrl;
-        }
-
-        // Load Excel data from GitHub repository
-        async function loadExcelData() {
-            const fileUrl = document.getElementById('githubFileUrl').value.trim();
-            const fileName = excelFileNameInput.value.trim() || 'products.xlsx';
-            const manualUsername = document.getElementById('githubUsername').value.trim();
-            const manualRepo = document.getElementById('githubRepo').value.trim();
-            
-            let githubUrl;
-            
-            // Method 1: Use direct file URL if provided
-            if (fileUrl) {
-                githubUrl = convertToRawUrl(fileUrl);
-            }
-            // Method 2: Build URL from username/repo/filename
-            else if (manualUsername && manualRepo) {
-                githubUrl = `https://raw.githubusercontent.com/${manualUsername}/${manualRepo}/main/${fileName}`;
-            }
-            // Method 3: Try auto-detection
-            else {
-                const autoDetected = getRepoInfo();
-                const username = autoDetected.username;
-                const repoName = autoDetected.repoName;
-                
-                if (!username || !repoName) {
-                    updateStatus('error', 'חסר מידע GitHub');
-                    addMessage(`
-                        <div class="error-message">
-                            <strong>❌ חסר מידע:</strong><br>
-                            אנא בחר אחת מהאפשרויות:<br><br>
-                            
-                            <strong>אפשרות 1:</strong> העתק את הקישור המלא לקובץ מ-GitHub<br>
-                            <strong>אפשרות 2:</strong> מלא שם משתמש ושם רפוזיטורי<br><br>
-                            
-                            <strong>הקישור שלך:</strong><br>
-                            https://github.com/print-imall/company-chat/blob/main/products.xlsx<br>
-                            פשוט העתק אותו לשדה "קישור GitHub לקובץ Excel"
-                        </div>
-                    `);
-                    return;
-                }
-                
-                githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
-            }
-            
-            updateStatus('loading', 'טוען נתונים מ-GitHub...');
-            
-            try {
-                console.log('Trying to load from:', githubUrl);
-                
-                const response = await fetch(githubUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const arrayBuffer = await response.arrayBuffer();
-                const data = new Uint8Array(arrayBuffer);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                
-                productsData = jsonData;
-                productCount.textContent = productsData.length;
-                statsBar.style.display = 'block';
-                
-                updateStatus('ready', `✅ נטענו ${productsData.length} מוצרים`);
-                addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
-                          נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
-                          מקור: <code>${githubUrl}</code>`);
-                
-                // Enable search
-                searchInput.disabled = false;
-                searchBtn.disabled = false;
-                
-                // Show sample of loaded data
-                if (productsData.length > 0) {
-                    const sampleFields = Object.keys(productsData[0]).slice(0, 5).join(', ');
-                    addMessage(`<strong>🔍 שדות זמינים:</strong> ${sampleFields}...`);
-                }
-                
-                console.log('Sample data:', productsData.slice(0, 3));
-                
-            } catch (error) {
-                console.error('Error loading Excel:', error);
-                updateStatus('error', 'שגיאה בטעינת הנתונים');
-                
-                addMessage(`
-                    <div class="error-message">
-                        <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
-                        ${error.message}<br><br>
-                        
-                        <strong>URL שנבדק:</strong><br>
-                        <code>${githubUrl}</code><br><br>
-                        
-                        <strong>פתרונות אפשריים:</strong><br>
-                        1. בדוק שהקובץ קיים ב-GitHub<br>
-                        2. ודא שהרפוזיטורי ציבורי (Public)<br>
-                        3. נסה לפתוח את ה-URL הזה ישירות בדפדפן<br>
-                        4. בדוק שהקובץ הוא Excel תקין (.xlsx או .xls)<br><br>
-                        
-                        <strong>לדוגמה:</strong><br>
-                        הקישור הנכון עבורך צריך להיות:<br>
-                        <code>https://raw.githubusercontent.com/print-imall/company-chat/main/products.xlsx</code>
-                    </div>
-                `);
-            }
         }
 
         // Handle image name format selection
@@ -573,9 +706,7 @@
             const baseUrl = dropboxUrlInput.value.trim();
             if (!baseUrl) return null;
             
-            // Make sure base URL ends with /
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-            
             const format = document.getElementById('imageNameFormat').value;
             let filename;
             
@@ -600,7 +731,7 @@
         // Test image URL function
         function testImageUrl() {
             if (productsData.length === 0) {
-                addMessage('<strong>❌ אין נתונים:</strong> טען קודם את קובץ ה-Excel');
+                addMessage('<div class="error-message"><strong>❌ אין נתונים:</strong> טען קודם את קובץ ה-Excel</div>');
                 return;
             }
             
@@ -609,17 +740,17 @@
             const imageUrl = generateImageUrl(productCode);
             
             if (!imageUrl) {
-                addMessage('<strong>❌ אין כתובת תמונות:</strong> הגדר כתובת בסיס לתמונות');
+                addMessage('<div class="error-message"><strong>❌ אין כתובת תמונות:</strong> הגדר כתובת בסיס לתמונות</div>');
                 return;
             }
             
             addMessage(`<strong>🧪 בודק תמונה לדוגמה:</strong><br>
-                      מקט: ${productCode}<br>
-                      URL: <code>${imageUrl}</code><br><br>
-                      <img src="${imageUrl}" style="max-width: 200px; border-radius: 5px;" 
-                           onload="this.nextSibling.textContent='✅ תמונה נטענה בהצלחה!'" 
-                           onerror="this.nextSibling.textContent='❌ לא ניתן לטעון תמונה - בדוק את ההגדרות'">
-                      <div>⏳ טוען תמונה...</div>`);
+                      מקט: <code>${productCode}</code><br>
+                      URL: <code style="word-break: break-all;">${imageUrl}</code><br><br>
+                      <img src="${imageUrl}" style="max-width: 200px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" 
+                           onload="this.nextSibling.innerHTML='<strong style=\\"color: #28a745;\\">✅ תמונה נטענה בהצלחה!</strong>'" 
+                           onerror="this.nextSibling.innerHTML='<strong style=\\"color: #dc3545;\\">❌ לא ניתן לטעון תמונה - בדוק את ההגדרות</strong>'">
+                      <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">⏳ טוען תמונה...</div>`);
         }
 
         // Handle Dropbox URL configuration
@@ -627,61 +758,291 @@
             dropboxBaseUrl = e.target.value.trim();
         });
 
-        // Search function with fuzzy matching
+        // Convert GitHub blob URL to raw URL
+        function convertToRawUrl(githubUrl) {
+            if (githubUrl.includes('github.com') && githubUrl.includes('/blob/')) {
+                return githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            }
+            return githubUrl;
+        }
+
+        // Get current repository info from URL
+        function getRepoInfo() {
+            const currentUrl = window.location.href;
+            
+            if (currentUrl.includes('github.io')) {
+                const parts = currentUrl.split('/');
+                const username = parts[2].replace('.github.io', '');
+                const repoName = parts[3] || username;
+                return { username, repoName };
+            }
+            
+            return { username: '', repoName: '' };
+        }
+
+        // Load Excel data from GitHub repository
+        async function loadExcelData() {
+            const fileUrl = document.getElementById('githubFileUrl').value.trim();
+            const fileName = 'products.xlsx';
+            const manualUsername = document.getElementById('githubUsername').value.trim();
+            const manualRepo = document.getElementById('githubRepo').value.trim();
+            
+            let githubUrl;
+            
+            if (fileUrl) {
+                githubUrl = convertToRawUrl(fileUrl);
+            } else if (manualUsername && manualRepo) {
+                githubUrl = `https://raw.githubusercontent.com/${manualUsername}/${manualRepo}/main/${fileName}`;
+            } else {
+                const autoDetected = getRepoInfo();
+                const username = autoDetected.username;
+                const repoName = autoDetected.repoName;
+                
+                if (!username || !repoName) {
+                    updateStatus('error', 'חסר מידע GitHub');
+                    addMessage(`
+                        <div class="error-message">
+                            <strong>❌ חסר מידע:</strong><br>
+                            אנא בחר אחת מהאפשרויות:<br><br>
+                            
+                            <strong>אפשרות 1:</strong> העתק את הקישור המלא לקובץ מ-GitHub<br>
+                            <strong>אפשרות 2:</strong> מלא שם משתמש ושם רפוזיטורי<br><br>
+                        </div>
+                    `);
+                    return;
+                }
+                
+                githubUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${fileName}`;
+            }
+            
+            updateStatus('loading', 'טוען נתונים מ-GitHub...');
+            
+            try {
+                console.log('Loading from:', githubUrl);
+                
+                const response = await fetch(githubUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                productsData = jsonData;
+                productCount.textContent = productsData.length;
+                statsCard.style.display = 'block';
+                
+                updateStatus('ready', `נטענו ${productsData.length} מוצרים`);
+                addMessage(`<strong>📊 נתונים נטענו בהצלחה מ-GitHub!</strong><br>
+                          נמצאו <strong>${productsData.length} מוצרים</strong> במאגר הנתונים.<br>
+                          <code>${githubUrl}</code>`);
+                
+                // Enable search
+                searchInput.disabled = false;
+                searchBtn.disabled = false;
+                
+                // Show sample of loaded data
+                if (productsData.length > 0) {
+                    const sampleFields = Object.keys(productsData[0]).slice(0, 5).join(', ');
+                    addMessage(`<strong>🔍 שדות זמינים:</strong> ${sampleFields}...`);
+                }
+                
+                console.log('Sample data:', productsData.slice(0, 3));
+                
+            } catch (error) {
+                console.error('Error loading Excel:', error);
+                updateStatus('error', 'שגיאה בטעינת הנתונים');
+                
+                addMessage(`
+                    <div class="error-message">
+                        <strong>❌ שגיאה בטעינת הנתונים:</strong><br>
+                        ${error.message}<br><br>
+                        
+                        <strong>URL שנבדק:</strong><br>
+                        <code style="word-break: break-all;">${githubUrl}</code><br><br>
+                        
+                        <strong>פתרונות אפשריים:</strong><br>
+                        1. בדוק שהקובץ קיים ב-GitHub<br>
+                        2. ודא שהרפוזיטורי ציבורי (Public)<br>
+                        3. נסה לפתוח את ה-URL הזה ישירות בדפדפן<br>
+                        4. בדוק שהקובץ הוא Excel תקין (.xlsx או .xls)
+                    </div>
+                `);
+            }
+        }
+
+        // Calculate similarity between two strings (for fuzzy matching)
+        function calculateSimilarity(str1, str2) {
+            if (str1.length === 0 || str2.length === 0) return 0;
+            
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1;
+            
+            let matches = 0;
+            for (let i = 0; i < shorter.length; i++) {
+                if (longer.includes(shorter[i])) {
+                    matches++;
+                }
+            }
+            
+            return matches / longer.length;
+        }
+
+        // Platform-first search function
         function searchProducts(query) {
             if (!query.trim()) return [];
 
-            const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+            const originalQuery = query.trim();
+            const searchTerms = originalQuery.toLowerCase().split(/\s+/).filter(term => term.length > 0);
             
-            return productsData.map(product => {
+            // Step 1: Search ONLY in Platform field first
+            const platformResults = productsData.map(product => {
+                const platformValue = String(product['פלטפורמה'] || '').toLowerCase();
+                const queryLower = originalQuery.toLowerCase();
                 let score = 0;
                 let matches = [];
 
-                // Define searchable fields with Hebrew labels
+                // Exact match in platform
+                if (platformValue === queryLower) {
+                    score = 1000;
+                    matches.push('פלטפורמה: התאמה מושלמת');
+                }
+                // Platform contains full query
+                else if (platformValue.includes(queryLower) && queryLower.length > 1) {
+                    score = 800;
+                    matches.push('פלטפורמה: מכיל את החיפוש המלא');
+                }
+                // Platform starts with query
+                else if (platformValue.startsWith(queryLower)) {
+                    score = 700;
+                    matches.push('פלטפורמה: מתחיל בחיפוש');
+                }
+                // Check individual terms in platform
+                else {
+                    searchTerms.forEach(term => {
+                        if (term.length < 2) return;
+                        
+                        if (platformValue === term) {
+                            score += 600;
+                            matches.push(`פלטפורמה: התאמה מלאה למונח "${term}"`);
+                        }
+                        else if (platformValue.includes(term)) {
+                            score += 400;
+                            matches.push(`פלטפורמה: מכיל "${term}"`);
+                        }
+                        else if (platformValue.startsWith(term)) {
+                            score += 500;
+                            matches.push(`פלטפורמה: מתחיל ב-"${term}"`);
+                        }
+                    });
+                }
+
+                if (score > 0) {
+                    return { product, score, matches, searchLevel: 'platform' };
+                }
+                return null;
+            }).filter(item => item !== null);
+
+            // If we found results in platform, return the best one
+            if (platformResults.length > 0) {
+                const bestPlatformResult = platformResults.sort((a, b) => b.score - a.score)[0];
+                return [bestPlatformResult];
+            }
+
+            // Step 2: If no results in platform, search in all other fields
+            const generalResults = productsData.map(product => {
+                let score = 0;
+                let matches = [];
+                let highPriorityMatches = 0;
+
+                // Define other searchable fields (excluding platform which we already searched)
                 const searchFields = {
-                    'מתחם': product['מתחם'] || '',
-                    'מקט': product['מקט'] || '',
-                    'פלטפורמה': product['פלטפורמה'] || '',
-                    'מחיר מכירה': product['מחיר מכירה'] || '',
-                    'מבקרים': product['מבקרים'] || '',
-                    'גובה': product['גובה'] || '',
-                    'רוחב': product['רוחב'] || '',
-                    'גובה2': product['גובה2'] || '',
-                    'רוחב2': product['רוחב2'] || '',
-                    'קמפיין': product['קמפיין'] || ''
+                    'מקט': { value: String(product['מקט'] || ''), priority: 10 },
+                    'מתחם': { value: String(product['מתחם'] || ''), priority: 8 },
+                    'קמפיין': { value: String(product['קמפיין'] || ''), priority: 6 },
+                    'מחיר מכירה': { value: String(product['מחיר מכירה'] || ''), priority: 5 },
+                    'מבקרים': { value: String(product['מבקרים'] || ''), priority: 5 },
+                    'גובה': { value: String(product['גובה'] || ''), priority: 3 },
+                    'רוחב': { value: String(product['רוחב'] || ''), priority: 3 },
+                    'גובה2': { value: String(product['גובה2'] || ''), priority: 3 },
+                    'רוחב2': { value: String(product['רוחב2'] || ''), priority: 3 }
                 };
 
-                // Check each search term against each field
+                // Check for exact phrase match first
+                Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
+                    const fieldStr = fieldData.value.toLowerCase();
+                    const queryLower = originalQuery.toLowerCase();
+                    
+                    if (fieldStr === queryLower) {
+                        score += fieldData.priority * 15;
+                        matches.push(`${fieldName}: התאמה מלאה מושלמת`);
+                        highPriorityMatches++;
+                        return;
+                    }
+                    
+                    if (fieldStr.includes(queryLower) && queryLower.length > 2) {
+                        score += fieldData.priority * 12;
+                        matches.push(`${fieldName}: מכיל את החיפוש המלא`);
+                        if (fieldData.priority >= 8) highPriorityMatches++;
+                        return;
+                    }
+                });
+
+                // Check individual terms
                 searchTerms.forEach(term => {
-                    Object.entries(searchFields).forEach(([fieldName, fieldValue]) => {
-                        const fieldStr = String(fieldValue).toLowerCase();
+                    if (term.length < 2) return;
+                    
+                    Object.entries(searchFields).forEach(([fieldName, fieldData]) => {
+                        const fieldStr = fieldData.value.toLowerCase();
                         
-                        // Exact match gets highest score
                         if (fieldStr === term) {
-                            score += 10;
-                            matches.push(`${fieldName}: התאמה מלאה`);
+                            score += fieldData.priority * 10;
+                            matches.push(`${fieldName}: התאמה מלאה למונח "${term}"`);
+                            if (fieldData.priority >= 8) highPriorityMatches++;
                         }
-                        // Contains match gets medium score
+                        else if (fieldStr.startsWith(term)) {
+                            score += fieldData.priority * 8;
+                            matches.push(`${fieldName}: מתחיל ב-"${term}"`);
+                            if (fieldData.priority >= 8) highPriorityMatches++;
+                        }
                         else if (fieldStr.includes(term)) {
-                            score += 5;
+                            score += fieldData.priority * 5;
                             matches.push(`${fieldName}: מכיל "${term}"`);
                         }
-                        // Partial match gets lower score
-                        else if (term.length > 2 && fieldStr.includes(term.substring(0, term.length-1))) {
-                            score += 2;
-                            matches.push(`${fieldName}: התאמה חלקית`);
+                        else if (term.length > 3) {
+                            const similarity = calculateSimilarity(fieldStr, term);
+                            if (similarity > 0.7) {
+                                score += fieldData.priority * 3;
+                                matches.push(`${fieldName}: דומה ל-"${term}"`);
+                            }
                         }
                     });
                 });
 
-                return { product, score, matches };
+                if (highPriorityMatches > 1) score += 20;
+                if (searchTerms.length > 1 && matches.length >= searchTerms.length) score += 10;
+
+                return { product, score, matches, highPriorityMatches, searchLevel: 'general' };
             })
             .filter(item => item.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5);
+            .sort((a, b) => {
+                if (a.highPriorityMatches !== b.highPriorityMatches) {
+                    return b.highPriorityMatches - a.highPriorityMatches;
+                }
+                return b.score - a.score;
+            })
+            .slice(0, 1);
+
+            return generalResults;
         }
 
-        // Display product result with enhanced image handling
+        // Display product result with enhanced styling
         function displayProductResult(item) {
             const { product, score, matches, searchLevel } = item;
             const confidence = searchLevel === 'platform' ? Math.min(100, Math.round((score / 10))) : Math.min(100, Math.round((score / 50) * 100));
@@ -689,7 +1050,6 @@
             const productCode = product['מקט'] || 'לא זמין';
             const imageUrl = generateImageUrl(productCode);
 
-            // Show search method and matching info
             const searchMethod = searchLevel === 'platform' ? '🎯 נמצא בפלטפורמה' : '🔍 נמצא בשדות אחרים';
             const matchSummary = matches.slice(0, 3).join(', ');
             
@@ -699,7 +1059,7 @@
                         <div class="product-code">מקט: ${productCode}</div>
                         <div class="confidence-score">רמת התאמה: ${confidence}%</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 5px; margin-bottom: 15px; font-size: 12px;">
+                    <div class="match-info">
                         <div><strong>${searchMethod}</strong></div>
                         <div><strong>סיבת ההתאמה:</strong> ${matchSummary}</div>
                     </div>
@@ -708,9 +1068,9 @@
                             <div class="detail-label">מתחם</div>
                             <div class="detail-value">${product['מתחם'] || 'לא זמין'}</div>
                         </div>
-                        <div class="detail-item">
+                        <div class="detail-item ${searchLevel === 'platform' ? 'highlight' : ''}">
                             <div class="detail-label">פלטפורמה</div>
-                            <div class="detail-value" style="background: rgba(255,255,255,0.1); font-weight: bold;">${product['פלטפורמה'] || 'לא זמין'}</div>
+                            <div class="detail-value">${product['פלטפורמה'] || 'לא זמין'}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">מחיר מכירה</div>
@@ -738,23 +1098,25 @@
             if (imageUrl) {
                 html += `
                     <div class="product-image">
-                        <div class="image-loading" id="img-${productCode}">⏳ טוען תמונה...</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px;">
+                        <div class="image-loading" id="img-${productCode}">
+                            <span>⏳ טוען תמונה...</span>
+                        </div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 8px; word-break: break-all;">
                             URL: <code>${imageUrl}</code>
                         </div>
                     </div>
                 `;
             } else {
                 html += `
-                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center; margin-top: 15px; color: rgba(255,255,255,0.8);">
-                        📷 לא הוגדרה כתובת תמונות<br>
-                        הגדר כתובת בסיס לתמונות בהגדרות מעלה
+                    <div class="no-image-placeholder">
+                        <span>📷</span><br>
+                        <strong>לא הוגדרה כתובת תמונות</strong><br>
+                        <small>הגדר כתובת בסיס לתמונות בהגדרות</small>
                     </div>
                 `;
             }
 
             html += `</div>`;
-
             addMessage(html);
 
             // Try to load image with detailed feedback
@@ -771,9 +1133,10 @@
                 img.onerror = function() {
                     if (imageContainer) {
                         imageContainer.innerHTML = `
-                            <div style="color: rgba(255,255,255,0.7); padding: 10px;">
-                                ❌ לא נמצאה תמונה עבור מקט ${productCode}<br>
-                                <small>נסה לבדוק את ההגדרות או להשתמש בכפתור "בדוק תמונה לדוגמה"</small>
+                            <div style="color: rgba(255,255,255,0.8); padding: 15px;">
+                                <span>❌</span><br>
+                                <strong>לא נמצאה תמונה</strong><br>
+                                <small>מקט: ${productCode}</small>
                             </div>
                         `;
                     }
@@ -793,9 +1156,12 @@
             const results = searchProducts(query);
             
             if (results.length === 0) {
-                addMessage(`<strong>🔍 לא נמצאו תוצאות</strong><br>לא נמצא מוצר התואם לחיפוש "${query}". נסה חיפוש אחר או בדוק את האיות.`);
+                addMessage(`<div class="error-message">
+                    <strong>🔍 לא נמצאו תוצאות</strong><br>
+                    לא נמצא מוצר התואם לחיפוש "${query}".<br>
+                    נסה חיפוש אחר או בדוק את האיות.
+                </div>`);
             } else {
-                // Show only the best match
                 displayProductResult(results[0]);
             }
 
@@ -812,7 +1178,6 @@
 
         // Initialize - load data automatically
         window.addEventListener('load', function() {
-            // Wait a moment for the page to fully load, then load the Excel data
             setTimeout(() => {
                 loadExcelData();
             }, 1000);
